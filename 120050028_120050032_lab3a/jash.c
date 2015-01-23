@@ -14,13 +14,20 @@
 //using namespace std;
 
 /* Function declarations and globals */
-int parent_pid ;
+int parent_pid, error;
 char ** tokenize(char*) ;
 int execute_command(char** tokens) ;
 
+/**
+The signal handler function:
+This function handles signals sent to all the processes.
+The child processes will also inherit this handler from the parent.
+Upon receiving SIGQUIT or SIGINT, all the child processes are killed
+*/
+
 void sig_handler(int signo)
 {
-	if (getpid() != parent_pid){
+	if (getpid() != parent_pid){	// Checking if the process is a child process 
 	    if (signo == SIGINT)
 	    {
 	        printf("received SIGINT\n");
@@ -28,7 +35,7 @@ void sig_handler(int signo)
 	    else if (signo == SIGQUIT){
 	        printf("received SIGQUIT\n");
 	    }
-	    kill(getpid(), SIGKILL);
+	    kill(getpid(), SIGKILL); // Killing the process
 	}
 }
 
@@ -41,15 +48,15 @@ int main(int argc, char** argv){
 	/* Exact signals and handlers will depend on your implementation */
 	// signal(SIGINT, quit);
 	// signal(SIGTERM, quit);
-	
-    if (signal(SIGINT, sig_handler) == SIG_ERR)
+
+    if (signal(SIGINT, sig_handler) == SIG_ERR)		// Upon receiving a SIGINT, the signal calls the handler sig_handler
         printf("\ncan't catch SIGINT\n");
-    if (signal(SIGQUIT, sig_handler) == SIG_ERR)
+    if (signal(SIGQUIT, sig_handler) == SIG_ERR)	// Upon receiving a SIGQUIT, the signal calls the handler sig_handler
         printf("\ncan't catch SIGQUIT\n");
     //if (signal(SIGSTOP, sig_handler) == SIG_ERR)
       //  printf("\ncan't catch SIGSTOP\n");
-    // A long long wait so that we can easily issue a signal to this process
-    //while(1)
+    
+    // A wait so that we can easily issue a signal to this process
     sleep(1);
 
 
@@ -148,7 +155,7 @@ int execute_command(char** tokens) {
 		//printf("%s\n", tokens[1]);
 		if (chdir(tokens[1]) < 0){
 			perror("Directory doesn't exists error ");
-			return 1;
+			return -1;
 		}
 		else{
 			char cwd[1024];
