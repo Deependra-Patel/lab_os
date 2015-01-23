@@ -1,0 +1,137 @@
+Name: Deependra Patel (120050032)
+	Rohit Kumar (120050028)
+
+Q1.
+a. cache size 3072 KB (/proc/cpuinfo)
+   address size 36 bits physical, 48 bits virtual
+b. family 6
+	model 58
+	cores 4 (/proc/cpuinfo)
+c. max open files 1024 soft limit
+  4096 hard limit (/proc/pid/limits)
+d. 
+Preemption refers to the ability of the operating system to preempt (that is, stop or pause) a currently scheduled task in favour of a higher priority task. The resource being scheduled may be the processor or I/O, among others.
+In the Linux kernel, the scheduler is called after each timer interrupt (that is, quite a few times per second). It determines what process to run next based on a variety of factors, including priority, time already run, etc. The implementation of preemption in other kernels is likely to be similar.
+Making a scheduler preemptible has the advantage of better system responsiveness and scalability, but comes with the disadvantage of race conditions (where the executing process accesses the same resource before another preempted process finished using it). 
+
+/////////////////////////////////////////////////////
+Q2.
+from /proc/pid/stat file, 14th (utime) and 15th(kernel time) column
+time in no. of clock ticks
+
+1st
+3198   utime 
+16 kernel time
+
+2nd
+4146 utime
+2 kernel time
+User time in 2nd case(pow) is greater than first because it uses library therefore number of instructions increases. But kernel time in second case(with pow) is lesser than that of first.
+
+/////////////////////////////////////////////////
+Q3.
+a. 
+Running:
+The process is either running (it is the current process in the system) or it is ready to run (it is waiting to be assigned to one of the system's CPUs).
+Waiting:
+The process is waiting for an event or for a resource. Linux differentiates between two types of waiting process; interruptible and uninterruptible. Interruptible waiting processes can be interrupted by signals whereas uninterruptible waiting processes are waiting directly on hardware conditions and cannot be interrupted under any circumstances.
+Stopped:
+The process has been stopped, usually by receiving a signal. A process that is being debugged can be in a stopped state.
+Zombie:
+This is a halted process which, for some reason, still has a task_struct data structure in the task vector. It is what it sounds like, a dead process.
+
+b. program submitted (ques3.cpp)
+c. kill -STOP $pid will stop the process (run from terminal). You have to continue it using kill -CONT $pid.
+/////////////////////////////////////////////////////
+
+Q 4
+
+a. Count the no of a’s in both the files after 30 seconds.
+
+first -> 766726746
+second -> 572813012
+
+b. Observe the CPU percentage consumed by these processes.
+
+first:
+80.6%
+
+second:
+74.9%
+
+c. Observe the values of voluntary and involuntary context switches. (You can get them from status file of the proc filesystem.)
+
+first:
+voluntary_ctxt_switches:	124
+nonvoluntary_ctxt_switches:	1382
+
+second:
+voluntary_ctxt_switches:	132
+nonvoluntary_ctxt_switches:	2540
+
+After renice +20 <pid_of_first>
+
+a. Count the no of a’s in both the files after 30 seconds.
+
+first  -> 623371430
+second -> 615567360
+
+b. Observe the CPU percentage consumed by these processes.
+first:  92.4. after renice, this value decreases
+second: 91.6 
+
+c. Observe the values of voluntary and involuntary context switches. (You can get them from status file of the proc filesystem.)
+first:
+voluntary_ctxt_switches:	80
+nonvoluntary_ctxt_switches:	2362
+
+second:
+voluntary_ctxt_switches:	106
+nonvoluntary_ctxt_switches:	2050
+
+/////////////////////////////////////////////////////////////////////
+Q.5
+
+The /proc/loadavg file contains information on the system load. The first 3 values contain system load averages for the past 1, 5, and 15 minutes.
+
+Initial load average:
+0.26 0.33 0.56 3/728 8364
+
+Load average after executing ques5.c:
+1.14 0.53 0.62 6/719 8381
+
+Load average shows how much a system is loaded/overloaded with respect to a single CPU system. Value of 1 denotes that the system is fully loaded. e.g. value of 1.05 denotes that system is overloaded by 5% on average, .05 of total processes were waiting for the CPU. (1.05). 
+Value of 0.70 shows that CPU idled for 30% on average of the time.
+
+To obtain a significant increase in load averages, the file writing process is forked into many child file writing processes, and thus the load average is increased. (ques5.c)
+
+The load average obtained is:
+1526.39 336.26 110.04 14/11420 16218
+
+//////////////////////////////////////////////////////////////////////////
+Q.6 
+
+a. Run the executable. Use the proc file system to find the signal number corresponding to the interrupt signal being raised.
+
+The signal no. 8 (from the right, the rightmost being 1) corresponds to the interrupt.
+
+b. Which is the interrupt signal corresponding to the same?
+
+SIGFPE. (floating point error)
+
+c. Explain exactly which file(s) you looked into and how you retrieved it.
+
+/proc/$pid/status
+
+The number on right is a bitmask. If you convert it from hex to binary, each 1-bit represents a caught signal, counting from right to left starting with 1. So by interpreting the SigCgt line, we can see which signals are being caught.
+
+Interrupt signal present in the linux signal manual http://man7.org/linux/man-pages/man7/signal.7.html
+
+d. Can you also find the number of iterations executed? (If yes, explain how)
+
+10000. usinf stace 
+
+Lines like this correspond to SIGFPE, which have a count of 10000
+[000000000040067b] --- SIGFPE {si_signo=SIGFPE, si_code=FPE_INTDIV, si_addr=0x40067b} ---
+
+strace -i -o output.txt ./ques6.out
