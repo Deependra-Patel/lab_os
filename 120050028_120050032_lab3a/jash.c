@@ -14,6 +14,7 @@
 /* Function declarations and globals */
 int parent_pid, error;
 char ** tokenize(char*) ;
+char ** tokenizeCommands(char*) ;
 int execute_command(char** tokens) ;
 
 /**
@@ -147,6 +148,7 @@ int execute_command(char** tokens) {
 	and proceeds to perform the necessary actions. 
 	Returns 0 on success, -1 on failure. 
 	*/
+
 	if (tokens == NULL) {
 		return -1 ; 				// Null Command
 	} else if (tokens[0] == NULL) {
@@ -171,8 +173,13 @@ int execute_command(char** tokens) {
 		/* Run jobs in parallel, or print error on failure */
 
 		char commands[1000];
+		char** newTokens;
+		char** temp;
 		strcpy(commands, tokens[1]);
 
+		temp = (char **) malloc(MAXLINE*sizeof(char*));
+		temp[0] = (char*)malloc(MAXLINE*sizeof(char));
+		
 		int i ;
 		for(i=2; tokens[i]!=NULL; i++){
 			strcat(commands, tokens[i]);
@@ -180,10 +187,12 @@ int execute_command(char** tokens) {
 		}
 		strcat(commands, ":");
 		printf("Commands:  %s\n", commands);
-		char** newTokens = tokenizeCommands(commands);
+		newTokens = tokenizeCommands(commands);
 
 		for(i=0; newTokens[i]!=NULL; i++){
 			printf("%s\n", newTokens[i]);
+			strcpy(temp[0], newTokens[i]);
+			execute_command(temp);
 		}
 
 		return 0 ;
