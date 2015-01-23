@@ -176,7 +176,6 @@ int execute_command(char** tokens) {
 	} else if (!strcmp(tokens[0],"parallel")) {
 		/* Analyze the command to get the jobs */
 		/* Run jobs in parallel, or print error on failure */
-		isParallel = 1;
 		char commands[1000];
 		char** newTokens;
 		strcpy(commands, tokens[1]);
@@ -188,11 +187,11 @@ int execute_command(char** tokens) {
 			strcat(commands, " ");
 		}
 		strcat(commands, ":");
-		printf("Commands:  %s\n", commands);
+		//printf("Commands:  %s\n", commands);
 		newTokens = tokenizeCommands(commands);
 
 		for(i=0; newTokens[i]!=NULL; i++){
-			printf("%s\n", newTokens[i]);
+			//printf("%s\n", newTokens[i]);
 			execute_command(tokenize(newTokens[i]));
 		}
 
@@ -212,11 +211,11 @@ int execute_command(char** tokens) {
 					strcat(commands, " ");
 				}
 				strcat(commands, ":");
-				printf("Commands:  %s\n", commands);
+				//printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
-					printf("%s\n", newTokens[i]);
+					//printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i]));
 					if (err < 0)
 						break;
@@ -238,11 +237,11 @@ int execute_command(char** tokens) {
 					strcat(commands, " ");
 				}
 				strcat(commands, ":");
-				printf("Commands:  %s\n", commands);
+				//printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
-					printf("%s\n", newTokens[i]);
+					//printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i]));
 					if (err >= 0)
 						break;
@@ -269,7 +268,7 @@ int execute_command(char** tokens) {
 				}
 				char c[1000];
 				while(fgets(c, 1000, ifp) != NULL ){ //reading line by line
-					printf("Command: %s\n", c);
+					//printf("Command: %s\n", c);
 					char ** newTokens = tokenize(c);
 					execute_command(newTokens);
 					int i ;
@@ -279,6 +278,7 @@ int execute_command(char** tokens) {
 					free(newTokens);	
 				}
 				fclose(ifp); //closing file stream
+				waitpid(-1, error, 0);
 				sleep(2);
 				exit (0) ;
 			}
@@ -286,6 +286,7 @@ int execute_command(char** tokens) {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
 				int error = execvp(tokens[0], tokens);
+				wait();
 				if (error < 1){ //if error occurs
 					perror("Error occured ");
 					return -1;
@@ -297,21 +298,19 @@ int execute_command(char** tokens) {
 		else {
 			/* Parent Process */
 			/* Wait for child process to complete */
-			if(!isParallel){
-			    int returnStatus;    
-			    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+		    int returnStatus;    
+		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
 
-			    if (returnStatus == 0)  // Verify child process terminated without error.  
-			    {
-			       printf("The child process terminated normally.\n");    
-			    }
+		    if (returnStatus == 0)  // Verify child process terminated without error.  
+		    {
+		      // printf("The child process terminated normally.\n");    
+		    }
 
-			    if (returnStatus == 1)      
-			    {
-			       printf("The child process terminated with an error!.\n");  
+		    if (returnStatus == 1)      
+		    {
+		       //printf("The child process terminated with an error!.\n");  
 
-			    }
-			}
+		    }
 		}
 	}
 	return 1 ;
