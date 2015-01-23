@@ -1,0 +1,4 @@
+ls -l 
+ps
+gedit
+sleep 10
