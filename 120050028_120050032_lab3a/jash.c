@@ -20,18 +20,22 @@ int execute_command(char** tokens) ;
 
 void sig_handler(int signo)
 {
-    if (signo == SIGINT)
-        printf("received SIGINT\n");
-    else if (signo == SIGQUIT)
-        printf("received SIGQUIT\n");
-    else if (signo == SIGSTOP)
-        printf("received SIGSTOP\n");
+	if (getpid() != parent_pid){
+	    if (signo == SIGINT)
+	    {
+	        printf("received SIGINT\n");
+	    }
+	    else if (signo == SIGQUIT){
+	        printf("received SIGQUIT\n");
+	    }
+	    kill(getpid(), SIGKILL);
+	}
 }
 
 int main(int argc, char** argv){
 
 	
-	parent_pid = getpid() ;
+	parent_pid = getpid();
 	
 	/* Set (and define) appropriate signal handlers */
 	/* Exact signals and handlers will depend on your implementation */
@@ -42,8 +46,8 @@ int main(int argc, char** argv){
         printf("\ncan't catch SIGINT\n");
     if (signal(SIGQUIT, sig_handler) == SIG_ERR)
         printf("\ncan't catch SIGQUIT\n");
-    if (signal(SIGSTOP, sig_handler) == SIG_ERR)
-        printf("\ncan't catch SIGSTOP\n");
+    //if (signal(SIGSTOP, sig_handler) == SIG_ERR)
+      //  printf("\ncan't catch SIGSTOP\n");
     // A long long wait so that we can easily issue a signal to this process
     //while(1)
     sleep(1);
@@ -187,7 +191,12 @@ int execute_command(char** tokens) {
 				while(fgets(c, 1000, ifp) != NULL ){
 					printf("Command: %s\n", c);
 					char ** newTokens = tokenize(c);
-					execute_command(newTokens);	
+					execute_command(newTokens);
+					int i ;
+					for(i=0;newTokens[i]!=NULL;i++){
+						free(newTokens[i]);
+					}
+					free(newTokens);	
 				}
 				fclose(ifp);
 
@@ -201,6 +210,7 @@ int execute_command(char** tokens) {
 				int error = execvp(tokens[0], tokens);
 				if (error < 1)
 					perror("Error occured ");
+				fflush(stdout);
 				exit(0) ;
 			}
 		}
