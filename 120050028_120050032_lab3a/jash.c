@@ -3,9 +3,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-//#include <iostream>
-//#include <fstream>
-//#include <string>
+
 
 
 #define MAXLINE 1000
@@ -152,10 +150,9 @@ int execute_command(char** tokens) {
 		/* Quit the running process */
 		return 0 ;
 	} else if (!strcmp(tokens[0],"cd")) {
-		//printf("%s\n", tokens[1]);
 		if (chdir(tokens[1]) < 0){
 			perror("Directory doesn't exists error ");
-			return -1;
+			return 1;
 		}
 		else{
 			char cwd[1024];
@@ -182,48 +179,54 @@ int execute_command(char** tokens) {
 				/* Locate file and run commands */
 				/* May require recursive call to execute_command */
 				/* Exit child with or without error */
-
-				//cout<<"inside run"<<endl;
-				fflush(stdin);
-
+				fflush(stdin); //flushing the input
 				FILE *ifp;
 
-				ifp = fopen(tokens[1], "r");
-
+				ifp = fopen(tokens[1], "r"); //opening file for reading
 				if (ifp == NULL) {
 				  perror("File Not found");
 				  exit(1);
 				}
 				char c[1000];
-				while(fgets(c, 1000, ifp) != NULL ){
+				while(fgets(c, 1000, ifp) != NULL ){ //reading line by line
 					printf("Command: %s\n", c);
 					char ** newTokens = tokenize(c);
 					execute_command(newTokens);
 					int i ;
-					for(i=0;newTokens[i]!=NULL;i++){
+					for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
 						free(newTokens[i]);
 					}
 					free(newTokens);	
 				}
-				fclose(ifp);
-
-				sleep(10);
+				fclose(ifp); //closing file stream
+				sleep(2);
 				exit (0) ;
 			}
 			else {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
-				//cout<<"File execution"<<endl;
 				int error = execvp(tokens[0], tokens);
-				if (error < 1)
+				if (error < 1) //if error occurs
 					perror("Error occured ");
-				fflush(stdout);
+				fflush(stdout); //flushing output
 				exit(0) ;
 			}
 		}
 		else {
 			/* Parent Process */
 			/* Wait for child process to complete */
+		    int returnStatus;    
+		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+
+		    if (returnStatus == 0)  // Verify child process terminated without error.  
+		    {
+		       printf("The child process terminated normally.\n");    
+		    }
+
+		    if (returnStatus == 1)      
+		    {
+		       printf("The child process terminated with an error!.\n");    
+		    }
 		}
 	}
 	return 1 ;

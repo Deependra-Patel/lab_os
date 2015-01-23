@@ -1,4 +1,6 @@
 ls -l 
 ps
-gedit
-sleep 10
+gedit test.txt
+cd test
+run test2.run
+sleep 1
