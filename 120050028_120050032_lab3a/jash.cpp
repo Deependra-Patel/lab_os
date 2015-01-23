@@ -3,6 +3,10 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+
 
 #define MAXLINE 1000
 #define DEBUG 0
@@ -158,7 +162,7 @@ int execute_command(char** tokens) {
 		/* Run jobs sequentially, print error on failure */
 		/* Stop on failure or if all jobs are completed */
 		return 0 ;					// Return value accordingly
-	} else {
+		} else {
 		/* Either file is to be executed or batch file to be run */
 		/* Child process creation (needed for both cases) */
 		int pid = fork() ;
@@ -167,11 +171,42 @@ int execute_command(char** tokens) {
 				/* Locate file and run commands */
 				/* May require recursive call to execute_command */
 				/* Exit child with or without error */
+
+				//cout<<"inside run"<<endl;
+				fflush(stdin);
+
+
+				ifstream iFile(tokens[1]);
+				if(iFile){
+				    string line;
+				 
+				    /* While there is still a line. */
+				    while(getline(iFile, line)) {
+				        /* Printing goes here. */
+				        char command[100];			       	
+				        strcpy(command, line.c_str());
+				        printf("command: %s\n", command);
+				        char** newTokens;
+				       	newTokens = tokenize(command);
+						execute_command(newTokens);						
+				    }
+				 
+				    iFile.close();
+				}
+				else {
+					perror("File Not found");
+				}
+				//ifp.close();
+				sleep(10);
 				exit (0) ;
 			}
 			else {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
+				cout<<"File execution"<<endl;
+				int error = execvp(tokens[0], tokens);
+				if (error < 1)
+					perror("Error occured ");
 				exit(0) ;
 			}
 		}
