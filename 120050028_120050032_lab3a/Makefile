@@ -2,8 +2,8 @@
 ######################################################
 
 ## Compiler Options (change accordingly for C/C++)
-CC = g++
-SUFFIX = cpp
+CC = gcc
+SUFFIX = c
 
 ## Add compiler flags as needed
 CCFLAGS = -g -Wall

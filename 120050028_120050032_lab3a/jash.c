@@ -4,14 +4,14 @@
 #include <signal.h>
 #include <unistd.h>
 //#include <iostream>
-#include <fstream>
-#include <string>
+//#include <fstream>
+//#include <string>
 
 
 #define MAXLINE 1000
 #define DEBUG 0
 
-using namespace std;
+//using namespace std;
 
 /* Function declarations and globals */
 int parent_pid ;
@@ -175,28 +175,22 @@ int execute_command(char** tokens) {
 				//cout<<"inside run"<<endl;
 				fflush(stdin);
 
+				FILE *ifp;
 
-				ifstream iFile(tokens[1]);
-				if(iFile){
-				    string line;
-				 
-				    /* While there is still a line. */
-				    while(getline(iFile, line)) {
-				        /* Printing goes here. */
-				        char command[100];			       	
-				        strcpy(command, line.c_str());
-				        printf("command: %s\n", command);
-				        char** newTokens;
-				       	newTokens = tokenize(command);
-						execute_command(newTokens);						
-				    }
-				 
-				    iFile.close();
+				ifp = fopen(tokens[1], "r");
+
+				if (ifp == NULL) {
+				  perror("File Not found");
+				  exit(1);
 				}
-				else {
-					perror("File Not found");
+				char c[1000];
+				while(fgets(c, 1000, ifp) != NULL ){
+					printf("Command: %s\n", c);
+					char ** newTokens = tokenize(c);
+					execute_command(newTokens);	
 				}
-				//ifp.close();
+				fclose(ifp);
+
 				sleep(10);
 				exit (0) ;
 			}
