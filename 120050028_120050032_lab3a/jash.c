@@ -122,25 +122,32 @@ char ** tokenizeCommands(char* input){
 	int i, tokenIndex = 0, tokenNo = 0 ;
 	char *token = (char *)malloc(MAXLINE*sizeof(char));
 	char **tokens;
+	char **newTokens;
+	newTokens = tokenize(input);
 
 	tokens = (char **) malloc(MAXLINE*sizeof(char*));
-	for(i =0; i < strlen(input); i++){
-		char readChar = input[i];
-		if (readChar == ':' || readChar == '\n'){
-			token[tokenIndex] = '\0';
-			if (tokenIndex != 0){
-				tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
-				strcpy(tokens[tokenNo++], token);
-				tokenIndex = 0; 
-			}
-		} else {
-			token[tokenIndex++] = readChar;
+
+	char command[1000];
+	strcpy(command, "");
+	for(i =0; newTokens[i]!= NULL; i++){
+		//printf("%i\n", i);
+		//printf("%s\n", newTokens[i]);
+		if (strcmp(newTokens[i], ":::")){
+			strcat(command, newTokens[i]);
+			strcat(command, " ");
+		}
+		else{
+			tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
+			strcpy(tokens[tokenNo++], command);
+			//printf("%s\n", command);
+			strcpy(command, "");
 		}
 	}
 
 	tokens[tokenNo] = NULL ;
 	return tokens;
 }
+
 
 int execute_command(char** tokens) {
 	// int i;
@@ -159,7 +166,7 @@ int execute_command(char** tokens) {
 		return 0 ;					// Empty Command
 	} else if (!strcmp(tokens[0],"exit")) {
 		/* Quit the running process */
-		exit(0);
+		kill(parent_pid, SIGKILL);
 		return 0 ;
 	} else if (!strcmp(tokens[0],"cd")) {
 		if (chdir(tokens[1]) < 0){
@@ -178,23 +185,31 @@ int execute_command(char** tokens) {
 		/* Run jobs in parallel, or print error on failure */
 		char commands[1000];
 		char** newTokens;
-		strcpy(commands, tokens[1]);
+		strcpy(commands, "");
 		
 		int i ;
-		for(i=2; tokens[i]!=NULL; i++){
+		for(i=1; tokens[i]!=NULL; i++){
 			strcat(commands, " ");
 			strcat(commands, tokens[i]);
 			strcat(commands, " ");
 		}
-		strcat(commands, ":");
-		//printf("Commands:  %s\n", commands);
+		strcat(commands, ":::\n");
+	//	printf("Commands:  %s\n", commands);
 		newTokens = tokenizeCommands(commands);
-
+		int arr[100];
 		for(i=0; newTokens[i]!=NULL; i++){
 			//printf("%s\n", newTokens[i]);
-			execute_command(tokenize(newTokens[i]));
+			int cid;
+			if ((cid = fork()) == 0){
+				execute_command(tokenize(newTokens[i]));
+				exit(0);
+			}
+			arr[i] = cid;
 		}
-
+		int status, j;
+		for(j=0; j<i; j++){
+			waitpid(arr[i], &status, 0);
+		}
 		return 0 ;
 	} else if (!strcmp(tokens[0],"sequential")) {
 			/* Analyze the command to get the jobs */
@@ -202,16 +217,16 @@ int execute_command(char** tokens) {
 			/* Stop on failure or if all jobs are completed */
 				char commands[1000];
 				char** newTokens;
-				strcpy(commands, tokens[1]);
+				strcpy(commands, "");
 				
 				int i ;
-				for(i=2; tokens[i]!=NULL; i++){
+				for(i=1; tokens[i]!=NULL; i++){
 					strcat(commands, " ");
 					strcat(commands, tokens[i]);
 					strcat(commands, " ");
 				}
-				strcat(commands, ":");
-				//printf("Commands:  %s\n", commands);
+				strcat(commands, ":::\n");
+			//	printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
@@ -220,31 +235,32 @@ int execute_command(char** tokens) {
 					if (err < 0)
 						break;
 				}	
+				
 			return 0 ;					// Return value accordingly
-		} 
+		}
 		else if (!strcmp(tokens[0],"sequential_or")) {
 			/* Analyze the command to get the jobs */
 			/* Run jobs sequentially, print error on failure */
 			/* Stop on failure or if all jobs are completed */
 				char commands[1000];
 				char** newTokens;
-				strcpy(commands, tokens[1]);
+				strcpy(commands, "");
 				
 				int i ;
-				for(i=2; tokens[i]!=NULL; i++){
+				for(i=1; tokens[i]!=NULL; i++){
 					strcat(commands, " ");
 					strcat(commands, tokens[i]);
 					strcat(commands, " ");
 				}
-				strcat(commands, ":");
-				//printf("Commands:  %s\n", commands);
+				strcat(commands, ":::\n");
+			//	printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
 					//printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i]));
 					if (err >= 0)
-						break;
+						return -1;
 				}	
 			return 0 ;					// Return value accordingly
 		}
@@ -279,21 +295,23 @@ int execute_command(char** tokens) {
 				}
 				fclose(ifp); //closing file stream
 				waitpid(-1, error, 0);
-				sleep(2);
+				//sleep(2);
 				exit (0) ;
 			}
 			else {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
 				int error = execvp(tokens[0], tokens);
-				wait();
+				
 				if (error < 1){ //if error occurs
 					perror("Error occured ");
 					return -1;
 				}
+				wait();
 				fflush(stdout); //flushing output
 				exit(0) ;
 			}
+			return 1;
 		}
 		else {
 			/* Parent Process */
@@ -303,13 +321,14 @@ int execute_command(char** tokens) {
 
 		    if (returnStatus == 0)  // Verify child process terminated without error.  
 		    {
-		      // printf("The child process terminated normally.\n");    
+		      // printf("The child process terminated normally.\n");  
+		      return 0;  
 		    }
 
 		    if (returnStatus == 1)      
 		    {
 		       //printf("The child process terminated with an error!.\n");  
-
+		    	return -1;
 		    }
 		}
 	}

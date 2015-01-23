@@ -1,1 +1,3 @@
-parallel ls ../ ::: ls ./ ::: echo 1 ::: echo 2 ::: echo 3 ::: echo 4 ::: echo 5
+cd ./
+ls
+sequential cd ../ ::: ls ::: cd ../ ::: ls ::: emacs ::: echo : ::: fart ::: gedit
