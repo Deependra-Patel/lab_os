@@ -16,7 +16,7 @@ int parent_pid, error;
 char ** tokenize(char*) ;
 char ** tokenizeCommands(char*) ;
 int execute_command(char** tokens) ;
-
+int isParallel;
 /**
 The signal handler function:
 This function handles signals sent to all the processes.
@@ -143,6 +143,10 @@ char ** tokenizeCommands(char* input){
 }
 
 int execute_command(char** tokens) {
+	// int i;
+	// printf("Printing tokens\n");
+	// for(i = 0; tokens[i]!=NULL; i++)
+	// 	printf("%s\n", tokens[i]);
 	/* 
 	Takes the tokens from the parser oand based on the type of command 
 	and proceeds to perform the necessary actions. 
@@ -155,6 +159,7 @@ int execute_command(char** tokens) {
 		return 0 ;					// Empty Command
 	} else if (!strcmp(tokens[0],"exit")) {
 		/* Quit the running process */
+		exit(0);
 		return 0 ;
 	} else if (!strcmp(tokens[0],"cd")) {
 		if (chdir(tokens[1]) < 0){
@@ -171,17 +176,14 @@ int execute_command(char** tokens) {
 	} else if (!strcmp(tokens[0],"parallel")) {
 		/* Analyze the command to get the jobs */
 		/* Run jobs in parallel, or print error on failure */
-
+		isParallel = 1;
 		char commands[1000];
 		char** newTokens;
-		char** temp;
 		strcpy(commands, tokens[1]);
-
-		temp = (char **) malloc(MAXLINE*sizeof(char*));
-		temp[0] = (char*)malloc(MAXLINE*sizeof(char));
 		
 		int i ;
 		for(i=2; tokens[i]!=NULL; i++){
+			strcat(commands, " ");
 			strcat(commands, tokens[i]);
 			strcat(commands, " ");
 		}
@@ -191,17 +193,64 @@ int execute_command(char** tokens) {
 
 		for(i=0; newTokens[i]!=NULL; i++){
 			printf("%s\n", newTokens[i]);
-			strcpy(temp[0], newTokens[i]);
-			execute_command(temp);
+			execute_command(tokenize(newTokens[i]));
 		}
 
 		return 0 ;
 	} else if (!strcmp(tokens[0],"sequential")) {
-		/* Analyze the command to get the jobs */
-		/* Run jobs sequentially, print error on failure */
-		/* Stop on failure or if all jobs are completed */
-		return 0 ;					// Return value accordingly
-		} else {
+			/* Analyze the command to get the jobs */
+			/* Run jobs sequentially, print error on failure */
+			/* Stop on failure or if all jobs are completed */
+				char commands[1000];
+				char** newTokens;
+				strcpy(commands, tokens[1]);
+				
+				int i ;
+				for(i=2; tokens[i]!=NULL; i++){
+					strcat(commands, " ");
+					strcat(commands, tokens[i]);
+					strcat(commands, " ");
+				}
+				strcat(commands, ":");
+				printf("Commands:  %s\n", commands);
+				newTokens = tokenizeCommands(commands);
+
+				for(i=0; newTokens[i]!=NULL; i++){
+					printf("%s\n", newTokens[i]);
+					int err = execute_command(tokenize(newTokens[i]));
+					if (err < 0)
+						break;
+				}	
+			return 0 ;					// Return value accordingly
+		} 
+		else if (!strcmp(tokens[0],"sequential_or")) {
+			/* Analyze the command to get the jobs */
+			/* Run jobs sequentially, print error on failure */
+			/* Stop on failure or if all jobs are completed */
+				char commands[1000];
+				char** newTokens;
+				strcpy(commands, tokens[1]);
+				
+				int i ;
+				for(i=2; tokens[i]!=NULL; i++){
+					strcat(commands, " ");
+					strcat(commands, tokens[i]);
+					strcat(commands, " ");
+				}
+				strcat(commands, ":");
+				printf("Commands:  %s\n", commands);
+				newTokens = tokenizeCommands(commands);
+
+				for(i=0; newTokens[i]!=NULL; i++){
+					printf("%s\n", newTokens[i]);
+					int err = execute_command(tokenize(newTokens[i]));
+					if (err >= 0)
+						break;
+				}	
+			return 0 ;					// Return value accordingly
+		}
+
+		else {
 		/* Either file is to be executed or batch file to be run */
 		/* Child process creation (needed for both cases) */
 		int pid = fork() ;
@@ -237,8 +286,10 @@ int execute_command(char** tokens) {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
 				int error = execvp(tokens[0], tokens);
-				if (error < 1) //if error occurs
+				if (error < 1){ //if error occurs
 					perror("Error occured ");
+					return -1;
+				}
 				fflush(stdout); //flushing output
 				exit(0) ;
 			}
@@ -246,18 +297,21 @@ int execute_command(char** tokens) {
 		else {
 			/* Parent Process */
 			/* Wait for child process to complete */
-		    int returnStatus;    
-		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+			if(!isParallel){
+			    int returnStatus;    
+			    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
 
-		    if (returnStatus == 0)  // Verify child process terminated without error.  
-		    {
-		       printf("The child process terminated normally.\n");    
-		    }
+			    if (returnStatus == 0)  // Verify child process terminated without error.  
+			    {
+			       printf("The child process terminated normally.\n");    
+			    }
 
-		    if (returnStatus == 1)      
-		    {
-		       printf("The child process terminated with an error!.\n");    
-		    }
+			    if (returnStatus == 1)      
+			    {
+			       printf("The child process terminated with an error!.\n");  
+
+			    }
+			}
 		}
 	}
 	return 1 ;

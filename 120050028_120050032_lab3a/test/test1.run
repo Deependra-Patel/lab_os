@@ -1,5 +1,7 @@
+gedit
 ls -l 
 ps
+exit
 gedit test.txt
 cd test
 run test2.run
