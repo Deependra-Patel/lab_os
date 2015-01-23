@@ -100,19 +100,7 @@ char ** tokenize(char* input){
 	for(i =0; i < strlen(input); i++){
 		char readChar = input[i];
 
-		if (readChar == '"'){
-			doubleQuotes = (doubleQuotes + 1) % 2;
-			if (doubleQuotes == 0){
-				token[tokenIndex] = '\0';
-				if (tokenIndex != 0){
-					tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
-					strcpy(tokens[tokenNo++], token);
-					tokenIndex = 0; 
-				}
-			}
-		} else if (doubleQuotes == 1){
-			token[tokenIndex++] = readChar;
-		} else if (readChar == ' ' || readChar == '\n' || readChar == '\t'){
+		if (readChar == ' ' || readChar == '\n' || readChar == '\t'){
 			token[tokenIndex] = '\0';
 			if (tokenIndex != 0){
 				tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
@@ -124,11 +112,28 @@ char ** tokenize(char* input){
 		}
 	}
 
-	if (doubleQuotes == 1){
-		token[tokenIndex] = '\0';
-		if (tokenIndex != 0){
-			tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
-			strcpy(tokens[tokenNo++], token);
+	tokens[tokenNo] = NULL ;
+	return tokens;
+}
+
+/*The tokenizer function takes a string of chars and forms tokens out of it*/
+char ** tokenizeCommands(char* input){
+	int i, tokenIndex = 0, tokenNo = 0 ;
+	char *token = (char *)malloc(MAXLINE*sizeof(char));
+	char **tokens;
+
+	tokens = (char **) malloc(MAXLINE*sizeof(char*));
+	for(i =0; i < strlen(input); i++){
+		char readChar = input[i];
+		if (readChar == ':' || readChar == '\n'){
+			token[tokenIndex] = '\0';
+			if (tokenIndex != 0){
+				tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
+				strcpy(tokens[tokenNo++], token);
+				tokenIndex = 0; 
+			}
+		} else {
+			token[tokenIndex++] = readChar;
 		}
 	}
 
@@ -164,6 +169,23 @@ int execute_command(char** tokens) {
 	} else if (!strcmp(tokens[0],"parallel")) {
 		/* Analyze the command to get the jobs */
 		/* Run jobs in parallel, or print error on failure */
+
+		char commands[1000];
+		strcpy(commands, tokens[1]);
+
+		int i ;
+		for(i=2; tokens[i]!=NULL; i++){
+			strcat(commands, tokens[i]);
+			strcat(commands, " ");
+		}
+		strcat(commands, ":");
+		printf("Commands:  %s\n", commands);
+		char** newTokens = tokenizeCommands(commands);
+
+		for(i=0; newTokens[i]!=NULL; i++){
+			printf("%s\n", newTokens[i]);
+		}
+
 		return 0 ;
 	} else if (!strcmp(tokens[0],"sequential")) {
 		/* Analyze the command to get the jobs */
