@@ -389,6 +389,11 @@ int execute_command(char** tokens) {
 						free(newTokens[i]);
 					}
 					free(newTokens);	
+
+					for(i=0;newExec[i]!=NULL;i++){ 
+						free(newExec[i]);
+					}
+					free(newExec);
 				}
 				else{
 					//printf("cron Background Process created with pid: %d\n", cronPid);
