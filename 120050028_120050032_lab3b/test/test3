@@ -1,4 +1,4 @@
-sequential cd ../ ::: ls ::: cd ../ ::: ls ::: emacs ::: echo : ::: gedit
+sequential cd ../ ::: ls ::: cd ../ ::: ls ::: subl ::: echo : ::: gedit
 cd ./
 ls
 echo 342

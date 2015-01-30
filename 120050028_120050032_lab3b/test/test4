@@ -1,0 +1,6 @@
+ls | sort
+sequential ls | sort > a.txt ::: grep i < test1.run ::: man wc >> t.txt
+grep a < a.txt
+echo 3434
+exit
+pwd | wc
