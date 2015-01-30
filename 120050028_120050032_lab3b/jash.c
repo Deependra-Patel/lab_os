@@ -167,6 +167,22 @@ int ioStreamRedirect(char ** tokens){
 	int error;
 	int size = numTokens(tokens);
 	char * arr[MAXLINE];
+
+	int cntl = 0, cntg = 0, cntgg = 0;
+	for (i=0; i<size; i++){
+		if(!strcmp("<", tokens[i]))
+			cntl++;
+		else if(!strcmp(">>", tokens[i]))
+			cntgg++;
+		else if(!strcmp(">", tokens[i]))
+			cntg++;
+	}
+	//printf("%d %d %d \n",cntl, cntg, cntgg );
+	if(((cntl || cntg || cntgg) && size<3) ||  (cntl + cntg + cntgg >2 || (cntg == cntgg &&  cntg == 1))){
+		perror("Wrong syntax");
+		return -1;
+	}
+
 	if (size >= 3){
 		if (size >= 5 && !strcmp("<", tokens[size-4])){
 			int in = open(tokens[size-3], O_RDONLY);
@@ -185,7 +201,6 @@ int ioStreamRedirect(char ** tokens){
 		
 		if (strcmp(">", tokens[size-2]) == 0){
 			int out = open(tokens[size-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-			printf("here\n");
 			dup2(out, 1);
 			close(out);
 			error = execvp(tokens[0], arr);
@@ -193,13 +208,17 @@ int ioStreamRedirect(char ** tokens){
 		else if (strcmp(">>", tokens[size-2]) == 0){
 			int out = open(tokens[size-1], O_APPEND | O_WRONLY);
 			if (out < 0)
-				out = open(tokens[size-1],  O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+				out = open(tokens[size-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 			dup2(out, 1);
 			close(out);
 			error = execvp(tokens[0], arr);
 		}
 		else if (strcmp("<", tokens[size-2]) == 0){
 			int in = open(tokens[size-1], O_RDONLY);
+			if (in < 0){
+				perror("File doesn't exist/permission denied.");
+				return -1;
+			}
 			dup2(in, 0);
 			close(in);
 			error = execvp(tokens[0], arr);
