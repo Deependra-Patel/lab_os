@@ -1,5 +1,0 @@
-a.txt
-test1.run
-test2.run
-test3
-test4

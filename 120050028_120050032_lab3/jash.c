@@ -153,13 +153,13 @@ char ** tokenizeCommands(char* input){
 }
 
 
-int numTokens(char ** tokens){
+int numTokens(char ** tokens){ //counts number of elements in tokens array
 	int size = 0;
 	for (;tokens[size]!=NULL; size++){
 	}
 	return size;
 }
-int ioStreamRedirect(char ** tokens){
+int ioStreamRedirect(char ** tokens){ //redirects stdin and stdout to files given
 	int i;
 	for (i = 0; tokens[i]!=NULL; i++){
 		//printf("%s\n", tokens[i]);
@@ -168,7 +168,7 @@ int ioStreamRedirect(char ** tokens){
 	int size = numTokens(tokens);
 	char * arr[MAXLINE];
 
-	int cntl = 0, cntg = 0, cntgg = 0;
+	int cntl = 0, cntg = 0, cntgg = 0; //count of <. >, and >> for error checking
 	for (i=0; i<size; i++){
 		if(!strcmp("<", tokens[i]))
 			cntl++;
@@ -179,12 +179,12 @@ int ioStreamRedirect(char ** tokens){
 	}
 	//printf("%d %d %d \n",cntl, cntg, cntgg );
 	if(((cntl || cntg || cntgg) && size<3) ||  (cntl + cntg + cntgg >2 || (cntg == cntgg &&  cntg == 1))){
-		perror("Wrong syntax");
+		perror("Wrong syntax"); //printing error for wrong syntax
 		return -1;
 	}
 
 	if (size >= 3){
-		if (size >= 5 && !strcmp("<", tokens[size-4])){
+		if (size >= 5 && !strcmp("<", tokens[size-4])){ 
 			int in = open(tokens[size-3], O_RDONLY);
 			dup2(in, 0);
 			close(in);
@@ -196,30 +196,30 @@ int ioStreamRedirect(char ** tokens){
 			for (i = 0; i<size-2; i++){
 				arr[i] = tokens[i];
 			}
-			arr[i] = NULL;
+			arr[i] = NULL; //filling null at end of argv
 		}
 		
-		if (strcmp(">", tokens[size-2]) == 0){
+		if (strcmp(">", tokens[size-2]) == 0){ //creating new file
 			int out = open(tokens[size-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 			dup2(out, 1);
 			close(out);
 			error = execvp(tokens[0], arr);
 		}
 		else if (strcmp(">>", tokens[size-2]) == 0){
-			int out = open(tokens[size-1], O_APPEND | O_WRONLY);
-			if (out < 0)
+			int out = open(tokens[size-1], O_APPEND | O_WRONLY); //opening already made file
+			if (out < 0) //creating new file
 				out = open(tokens[size-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 			dup2(out, 1);
 			close(out);
 			error = execvp(tokens[0], arr);
 		}
-		else if (strcmp("<", tokens[size-2]) == 0){
+		else if (strcmp("<", tokens[size-2]) == 0){ //taking input from file
 			int in = open(tokens[size-1], O_RDONLY);
 			if (in < 0){
 				perror("File doesn't exist/permission denied.");
 				return -1;
 			}
-			dup2(in, 0);
+			dup2(in, 0); //assigning stdin
 			close(in);
 			error = execvp(tokens[0], arr);
 		}
@@ -228,7 +228,7 @@ int ioStreamRedirect(char ** tokens){
 	else {
 		error = execvp(tokens[0], tokens);
 	}
-	return error;
+	return error; //returning error
 }
 
 
@@ -402,7 +402,7 @@ int execute_command(char** tokens) {
 				strcpy(command2, "");
 
 				int i;
-				for(i=0;tokens[i]!=NULL;i++){ //freeing the memory
+				for(i=0;tokens[i]!=NULL;i++){ //separating commands before and after pipe
 					if (!strcmp(tokens[i], "|")){
 						pipePresent = 1;
 						continue;

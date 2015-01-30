@@ -1,7 +1,8 @@
 ######################################################
-CS 377 - Lab Assignment 3 (A)
+CS 377 - Lab Assignment 3 (B)
 
-23 January 2015
+30 January 2015
+6 pm
 Prof D. M. Dhamdhere
 
 ######################################################
@@ -24,7 +25,7 @@ Documentation: Included as comments in the code.
 
 
 Create a single tar-zipped archive of your folder (which you have to submit) —
-tar ­zcvf <RollNumber1>_<RollNumber2>_lab3a.tgz <RollNumber1>_<RollNumber2>_lab3a
+tar ­zcvf <RollNumber1>_<RollNumber2>_lab3.tgz <RollNumber1>_<RollNumber2>_lab3
 
 
 ######################################################	
