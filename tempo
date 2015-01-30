@@ -24,7 +24,6 @@ The child processes will also inherit this handler from the parent.
 Upon receiving SIGQUIT or SIGINT, all the child processes are killed
 */
 
-int try = 0;
 void sig_handler(int signo)
 {
 	if (getpid() != parent_pid){	// Checking if the process is a child process 
@@ -35,7 +34,6 @@ void sig_handler(int signo)
 	    else if (signo == SIGQUIT){
 	        printf("received SIGQUIT\n");
 	    }
-	    try = 1;
 	    kill(getpid(), SIGKILL); // Killing the process
 	}
 }
@@ -119,36 +117,30 @@ char ** tokenize(char* input){
 	return tokens;
 }
 
-/*The tokenizer function takes a string of chars(in case of :::) and forms all commands out of it*/
+/*The tokenizer function takes a string of chars and forms tokens out of it*/
 char ** tokenizeCommands(char* input){
 	int i, tokenIndex = 0, tokenNo = 0 ;
 	char *token = (char *)malloc(MAXLINE*sizeof(char));
 	char **tokens;
-	char **newTokens;
-	newTokens = tokenize(input);
 
 	tokens = (char **) malloc(MAXLINE*sizeof(char*));
-
-	char command[1000];
-	strcpy(command, "");
-	for(i =0; newTokens[i]!= NULL; i++){
-		//printf("%i\n", i);
-		//printf("%s\n", newTokens[i]);
-		if (strcmp(newTokens[i], ":::")){
-			strcat(command, newTokens[i]);
-			strcat(command, " ");
-		}
-		else{
-			tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
-			strcpy(tokens[tokenNo++], command);
-			//printf("%s\n", command);
-			strcpy(command, "");
+	for(i =0; i < strlen(input); i++){
+		char readChar = input[i];
+		if (readChar == ':' || readChar == '\n'){
+			token[tokenIndex] = '\0';
+			if (tokenIndex != 0){
+				tokens[tokenNo] = (char*)malloc(MAXLINE*sizeof(char));
+				strcpy(tokens[tokenNo++], token);
+				tokenIndex = 0; 
+			}
+		} else {
+			token[tokenIndex++] = readChar;
 		}
 	}
+
 	tokens[tokenNo] = NULL ;
 	return tokens;
 }
-
 
 int execute_command(char** tokens) {
 	// int i;
@@ -184,37 +176,34 @@ int execute_command(char** tokens) {
 	} else if (!strcmp(tokens[0],"parallel")) {
 		/* Analyze the command to get the jobs */
 		/* Run jobs in parallel, or print error on failure */
+		isParallel = 1;
 		char commands[1000];
 		char** newTokens;
-		strcpy(commands, "");
+		strcpy(commands, tokens[1]);
 		
 		int i ;
-		for(i=1; tokens[i]!=NULL; i++){
+		for(i=2; tokens[i]!=NULL; i++){
 			strcat(commands, " ");
 			strcat(commands, tokens[i]);
 			strcat(commands, " ");
 		}
-		strcat(commands, ":::\n");
-	//	printf("Commands:  %s\n", commands);
+		strcat(commands, ":");
+		printf("Commands:  %s\n", commands);
 		newTokens = tokenizeCommands(commands);
+
 		int arr[100];
 		for(i=0; newTokens[i]!=NULL; i++){
-			//printf("%s\n", newTokens[i]);
-			int cid;
-			if ((cid = fork()) == 0){
-				execute_command(tokenize(newTokens[i])); //executing commands
-				exit(0);
+			printf("%s\n", newTokens[i]);
+
+			int cpid;
+			if ((cpid = fork()) == 0){
+				execute_command(tokenize(newTokens[i]));
 			}
-			arr[i] = cid; //storing pids of children
+			else {
+				waitpid(cpid, NULL, 0);
+			} 
+		
 		}
-		int status, j;
-		for(j=0; j<i; j++){
-			waitpid(arr[i], &status, 0); // waiting for all child process to finish
-		}
-		for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
-			free(newTokens[i]);
-		}
-		free(newTokens);		
 		return 0 ;
 	} else if (!strcmp(tokens[0],"sequential")) {
 			/* Analyze the command to get the jobs */
@@ -222,59 +211,50 @@ int execute_command(char** tokens) {
 			/* Stop on failure or if all jobs are completed */
 				char commands[1000];
 				char** newTokens;
-				strcpy(commands, "");
+				strcpy(commands, tokens[1]);
 				
 				int i ;
-				for(i=1; tokens[i]!=NULL; i++){
+				for(i=2; tokens[i]!=NULL; i++){
 					strcat(commands, " ");
 					strcat(commands, tokens[i]);
 					strcat(commands, " ");
 				}
-				strcat(commands, ":::\n");
-			//	printf("Commands:  %s\n", commands);
+				strcat(commands, ":");
+				printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
-					//printf("%s\n", newTokens[i]);
-					int err = execute_command(tokenize(newTokens[i])); //executing commands sequentially
-					if (err < 0 || try) //
+					printf("%s\n", newTokens[i]);
+					int err = execute_command(tokenize(newTokens[i]));
+					if (err < 0)
 						break;
 				}	
-				for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
-					free(newTokens[i]);
-				}
-				free(newTokens);				
-				
 			return 0 ;					// Return value accordingly
-		}
+		} 
 		else if (!strcmp(tokens[0],"sequential_or")) {
 			/* Analyze the command to get the jobs */
 			/* Run jobs sequentially, print error on failure */
 			/* Stop on failure or if all jobs are completed */
 				char commands[1000];
 				char** newTokens;
-				strcpy(commands, "");
+				strcpy(commands, tokens[1]);
 				
 				int i ;
-				for(i=1; tokens[i]!=NULL; i++){ //parsing is being done
+				for(i=2; tokens[i]!=NULL; i++){
 					strcat(commands, " ");
 					strcat(commands, tokens[i]);
 					strcat(commands, " ");
 				}
-				strcat(commands, ":::\n"); //parsing sequential or commands
-			//	printf("Commands:  %s\n", commands);
+				strcat(commands, ":");
+				printf("Commands:  %s\n", commands);
 				newTokens = tokenizeCommands(commands);
 
 				for(i=0; newTokens[i]!=NULL; i++){
-					//printf("%s\n", newTokens[i]);
+					printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i]));
 					if (err >= 0)
-						return -1;
-				}
-				for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
-					free(newTokens[i]);
-				}
-				free(newTokens);
+						break;
+				}	
 			return 0 ;					// Return value accordingly
 		}
 
@@ -297,7 +277,7 @@ int execute_command(char** tokens) {
 				}
 				char c[1000];
 				while(fgets(c, 1000, ifp) != NULL ){ //reading line by line
-					//printf("Command: %s\n", c);
+					printf("Command: %s\n", c);
 					char ** newTokens = tokenize(c);
 					execute_command(newTokens);
 					int i ;
@@ -307,42 +287,40 @@ int execute_command(char** tokens) {
 					free(newTokens);	
 				}
 				fclose(ifp); //closing file stream
-				waitpid(-1, error, 0);
-				//sleep(2);
+				sleep(2);
 				exit (0) ;
 			}
 			else {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
 				int error = execvp(tokens[0], tokens);
-				
 				if (error < 1){ //if error occurs
 					perror("Error occured ");
 					return -1;
 				}
-				wait();
 				fflush(stdout); //flushing output
 				exit(0) ;
 			}
-			return 1;
 		}
 		else {
 			/* Parent Process */
 			/* Wait for child process to complete */
-		    int returnStatus;    
-		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+			if(1){
+			    int returnStatus;    
+			    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
 
-		    if (returnStatus == 0)  // Verify child process terminated without error.  
-		    {
-		      // printf("The child process terminated normally.\n");  
-		      return 0;  
-		    }
+			    if (returnStatus == 0)  // Verify child process terminated without error.  
+			    {
+			       printf("The child process terminated normally.\n");    
+			    }
 
-		    if (returnStatus == 1)      
-		    {
-		       //printf("The child process terminated with an error!.\n");  
-		    	return -1;
-		    }
+			    if (returnStatus == 1)      
+			    {
+			       printf("The child process terminated with an error!.\n");  
+
+			    }
+			}
+			return pid;
 		}
 	}
 	return 1 ;

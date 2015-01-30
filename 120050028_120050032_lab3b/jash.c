@@ -24,7 +24,6 @@ The child processes will also inherit this handler from the parent.
 Upon receiving SIGQUIT or SIGINT, all the child processes are killed
 */
 
-int try = 0;
 void sig_handler(int signo)
 {
 	if (getpid() != parent_pid){	// Checking if the process is a child process 
@@ -35,7 +34,6 @@ void sig_handler(int signo)
 	    else if (signo == SIGQUIT){
 	        printf("received SIGQUIT\n");
 	    }
-	    try = 1;
 	    kill(getpid(), SIGKILL); // Killing the process
 	}
 }
@@ -237,8 +235,8 @@ int execute_command(char** tokens) {
 				for(i=0; newTokens[i]!=NULL; i++){
 					//printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i])); //executing commands sequentially
-					if (err < 0 || try) //
-						break;
+					if (err < 0) //
+						return -1;
 				}	
 				for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
 					free(newTokens[i]);

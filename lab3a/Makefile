@@ -2,8 +2,8 @@
 ######################################################
 
 ## Compiler Options (change accordingly for C/C++)
-CC = gcc
-SUFFIX = c
+CC = g++
+SUFFIX = cpp
 
 ## Add compiler flags as needed
 CCFLAGS = -g -Wall
@@ -16,7 +16,7 @@ OBJDIR = $(PROJECT_ROOT)
 BINDIR = $(PROJECT_ROOT)
 
 ## Name of target file
-TARGET = jash
+TARGET = deep
 
 SRCS := $(wildcard $(SRCDIR)/*.$(SUFFIX))
 OBJS := $(SRCS:$(SRCDIR)/%.$(SUFFIX)=$(OBJDIR)/%.o)
