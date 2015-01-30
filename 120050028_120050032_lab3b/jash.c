@@ -3,6 +3,9 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 
@@ -12,10 +15,12 @@
 //using namespace std;
 
 /* Function declarations and globals */
-int parent_pid, error;
+int parent_pid, status;
 char ** tokenize(char*) ;
 char ** tokenizeCommands(char*) ;
 int execute_command(char** tokens) ;
+int ioStreamRedirect(char ** tokens);
+int numTokens(char ** tokens);
 int isParallel;
 /**
 The signal handler function:
@@ -148,6 +153,66 @@ char ** tokenizeCommands(char* input){
 }
 
 
+int numTokens(char ** tokens){
+	int size = 0;
+	for (;tokens[size]!=NULL; size++){
+	}
+	return size;
+}
+int ioStreamRedirect(char ** tokens){
+	int i;
+	for (i = 0; tokens[i]!=NULL; i++){
+		//printf("%s\n", tokens[i]);
+	}
+	int error;
+	int size = numTokens(tokens);
+	char * arr[MAXLINE];
+	if (size >= 3){
+		if (size >= 5 && !strcmp("<", tokens[size-4])){
+			int in = open(tokens[size-3], O_RDONLY);
+			dup2(in, 0);
+			close(in);
+			for(i = 0; i<size-4; i++)
+				arr[i] = tokens[i];
+			arr[i] = NULL;
+		}
+		else if (strcmp(">", tokens[size-2]) == 0 || strcmp(">>", tokens[size-2]) == 0 || strcmp("<", tokens[size-2]) == 0){
+			for (i = 0; i<size-2; i++){
+				arr[i] = tokens[i];
+			}
+			arr[i] = NULL;
+		}
+		
+		if (strcmp(">", tokens[size-2]) == 0){
+			int out = open(tokens[size-1], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+			printf("here\n");
+			dup2(out, 1);
+			close(out);
+			error = execvp(tokens[0], arr);
+		}
+		else if (strcmp(">>", tokens[size-2]) == 0){
+			int out = open(tokens[size-1], O_APPEND | O_WRONLY);
+			if (out < 0)
+				out = open(tokens[size-1],  O_WRONLY | O_CREAT | O_TRUNC | S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+			dup2(out, 1);
+			close(out);
+			error = execvp(tokens[0], arr);
+		}
+		else if (strcmp("<", tokens[size-2]) == 0){
+			int in = open(tokens[size-1], O_RDONLY);
+			dup2(in, 0);
+			close(in);
+			error = execvp(tokens[0], arr);
+		}
+		else error = execvp(tokens[0], tokens);
+	}
+	else {
+		error = execvp(tokens[0], tokens);
+	}
+	return error;
+}
+
+
 int execute_command(char** tokens) {
 	// int i;
 	// printf("Printing tokens\n");
@@ -166,16 +231,11 @@ int execute_command(char** tokens) {
 	} else if (!strcmp(tokens[0],"exit")) {
 		/* Quit the running process */
 		exit(0);
-		return 0 ;
+		//return -1;
 	} else if (!strcmp(tokens[0],"cd")) {
 		if (chdir(tokens[1]) < 0){
 			perror("Directory doesn't exists error ");
 			return 1;
-		}
-		else{
-			char cwd[1024];
-			if (getcwd(cwd, sizeof(cwd)) != NULL)
-				fprintf(stdout, "Current working dir: %s\n", cwd);
 		}
 		/* Change Directory, or print error on failure */
 		return 0 ;
@@ -235,9 +295,12 @@ int execute_command(char** tokens) {
 				for(i=0; newTokens[i]!=NULL; i++){
 					//printf("%s\n", newTokens[i]);
 					int err = execute_command(tokenize(newTokens[i])); //executing commands sequentially
-					if (err < 0) //
+					if (err < 0) {
+						//waitpid(getpid(), SIGKILL);
 						return -1;
-				}	
+						//break;
+					}
+				}
 				for(i=0;newTokens[i]!=NULL;i++){ //freeing the memory
 					free(newTokens[i]);
 				}
@@ -305,42 +368,136 @@ int execute_command(char** tokens) {
 					free(newTokens);	
 				}
 				fclose(ifp); //closing file stream
-				waitpid(-1, error, 0);
+				waitpid(-1, status, 0);
 				//sleep(2);
 				exit (0) ;
 			}
 			else {
 				/* File Execution */
 				/* Print error on failure, exit with error*/
-				int error = execvp(tokens[0], tokens);
-				
-				if (error < 1){ //if error occurs
-					perror("Error occured ");
-					return -1;
+
+				int pipePresent = 0;
+
+				char command1[MAXLINE], command2[MAXLINE]; 
+				strcpy(command1, "");
+				strcpy(command2, "");
+
+				int i;
+				for(i=0;tokens[i]!=NULL;i++){ //freeing the memory
+					if (!strcmp(tokens[i], "|")){
+						pipePresent = 1;
+						continue;
+					}
+					if (pipePresent == 0){
+						strcat(command1, tokens[i]);
+						strcat(command1, " ");
+					}
+					else{
+						strcat(command2, tokens[i]);
+						strcat(command2, " ");
+					}
 				}
-				wait();
-				fflush(stdout); //flushing output
-				exit(0) ;
+
+
+				if (pipePresent == 1){ // execute the piped instructions
+
+					int pipefd[2]; // Pipe File descriptor
+					int pipePid;
+
+					char** beforePipe = tokenize(command1);
+					char** afterPipe = tokenize(command2);
+
+					pipe(pipefd);  // creating a pipe file descriptor go in pipefd[0] and pipefd[1]
+
+					pipePid = fork();
+
+					if (pipePid == 0) {		// child process handles command after pipe
+						dup2(pipefd[1], 1); // input part of pipe
+						close(pipefd[0]); 	// close unused part of pipe
+
+						int error = ioStreamRedirect(beforePipe);
+						
+						
+						if (error < 1){ //if error occurs
+							perror("Broken Pipe");
+							exit(-1);
+						}
+						waitpid(-1, status, 0);
+						//_exit(EXIT_SUCCESS);
+						exit(0);
+						//return 0;
+					}
+					else{	// parent process handles command before pipe
+						dup2(pipefd[0], 0); // output part of pipe
+						close(pipefd[1]);  // close unused part of pipe
+
+						int error = ioStreamRedirect(afterPipe);
+
+						if (error < 1){ //if error occurs
+							perror("Broken Pipe");
+							exit(-1);
+						}
+						//wait(NULL);
+						waitpid(pipePid, status, 0);
+						//exit(EXIT_SUCCESS);
+					}
+					//waitpid(-1, status, 0);
+
+					for(i=0;afterPipe[i]!=NULL;i++){ //freeing the memory
+						free(afterPipe[i]);
+					}
+					free(afterPipe);
+
+					for(i=0;beforePipe[i]!=NULL;i++){ //freeing the memory
+						free(beforePipe[i]);
+					}
+					free(beforePipe);
+					waitpid(-1, status, 0);
+					exit(0);			
+				}
+
+				else{	// execute non-piped instructions
+					int error = ioStreamRedirect(tokens);
+					
+					if (error < 1){ //if error occurs
+						perror("Error in command");
+						exit(-1);
+					}
+					waitpid(-1, status, 0);
+					//fflush(stdout); //flushing output
+					exit(0);
+				}
 			}
 			return 1;
 		}
 		else {
 			/* Parent Process */
 			/* Wait for child process to complete */
-		    int returnStatus;    
+		    int returnStatus; 
+		    //wait(NULL); 
+		      
 		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
-
+		    /*
+		   	if (WIFEXITED(returnStatus) && WEXITSTATUS(returnStatus) == 0){
+		   		return 0;  
+		   	}
+		   	else{
+		   		return -1;
+		   	}
+		   	*/
+		   	
 		    if (returnStatus == 0)  // Verify child process terminated without error.  
 		    {
 		      // printf("The child process terminated normally.\n");  
 		      return 0;  
 		    }
 
-		    if (returnStatus == 1)      
+		    else
 		    {
-		       //printf("The child process terminated with an error!.\n");  
+		    	//printf("The child process terminated with an error!.\n");  
 		    	return -1;
 		    }
+		    
 		}
 	}
 	return 1 ;
