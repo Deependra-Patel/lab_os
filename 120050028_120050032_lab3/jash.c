@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 
 
 
@@ -21,6 +22,7 @@ char ** tokenizeCommands(char*) ;
 int execute_command(char** tokens) ;
 int ioStreamRedirect(char ** tokens);
 int numTokens(char ** tokens);
+int sleepVal(char* minute, char* hour);
 int isParallel;
 /**
 The signal handler function:
@@ -39,6 +41,10 @@ void sig_handler(int signo)
 	    else if (signo == SIGQUIT){
 	        printf("received SIGQUIT\n");
 	    }
+		int status;
+		wait(&status);
+		printf("Background process killed id: %d with status %d\n", getpid(), status);
+
 	    kill(getpid(), SIGKILL); // Killing the process
 	}
 }
@@ -231,6 +237,36 @@ int ioStreamRedirect(char ** tokens){ //redirects stdin and stdout to files give
 	return error; //returning error
 }
 
+/*
+	Function to find how much time is left for the next job and 
+	suspend or sleep the process until then, rather than checking the 
+	constraints after every minute
+*/
+
+int sleepVal(char* minute, char* hour){
+	time_t t = time(0);   // get time now
+    struct tm * now = localtime( &t );
+    //printf ( "Current local time and date: %s", asctime (now));
+    char minuteNow[10], hourNow[10];
+    sprintf(minuteNow, "%d", now->tm_min);
+    sprintf(hourNow, "%d", now->tm_hour);
+
+	if (!strcmp(hour, "*")){
+		if (!strcmp(minute,minuteNow)) return 3600;
+		int diff = (atoi(minute) - now->tm_min + 60)%60;
+		return diff*60;
+	} else if (!strcmp(minute, "*")){
+		int diff = ((atoi(hour) - now->tm_hour + 24)%24 + (0 - now->tm_min + 60) + 1440)%1440;
+		return diff*60;
+	} else{
+		if (!strcmp(minute,minuteNow) && !strcmp(hour,hourNow))
+			return 86400;
+		int diff = ((atoi(hour) - now->tm_hour + 24)%24 + (atoi(minute) - now->tm_min + 60)%60 + 1440)%1440;
+		//printf("fkgjf hjkfh gjk %d %d %d %d %d\n", atoi(hour), now->tm_hour, atoi(minute) , now->tm_min, diff);
+		return diff*60;
+	}
+}
+
 
 int execute_command(char** tokens) {
 	// int i;
@@ -247,8 +283,160 @@ int execute_command(char** tokens) {
 		return -1 ; 				// Null Command
 	} else if (tokens[0] == NULL) {
 		return 0 ;					// Empty Command
+	} else if (!strcmp(tokens[numTokens(tokens)-1], "&")){
+		tokens[numTokens(tokens)-1] = NULL;
+		int pid;
+		//runBack = 1;
+		if ((pid = fork()) == 0){
+			//cntBack = 1;
+			/*
+			if (sigignore(SIGINT) == SIG_ERR)		// Upon receiving a SIGINT, the signal calls the handler sig_handler
+		        printf("\ncan't remove SIGINT\n");
+			if (sigignore(SIGQUIT) == SIG_ERR)		// Upon receiving a SIGINT, the signal calls the handler sig_handler
+		        printf("\ncan't remove SIGQUIT\n");	*/	    
+			execute_command(tokens);
+			//signal(SIGINT, SIG_IGN);
+			//signal(SIGQUIT, SIG_IGN);
+		}
+		else {
+			//cntBack = 1;
+			//signal(SIGCHLD, sig_child_handler);
+			
+			//back[cntBack++] = pid;
+			//printf("Background Process created with pid: %d\n", pid);
+		}
+		return 0;
+	} else if (!strcmp(tokens[0],"cron")){
+
+		int pid;
+		//runBack = 1;
+		if ((pid = fork()) == 0){	// create a new process for cron in background
+			
+			fflush(stdin); //flushing the input
+			FILE *ifp;
+
+			ifp = fopen(tokens[1], "r"); //opening file for reading
+			if (ifp == NULL) {
+			  perror("File Not found");
+			  exit(-1);
+			}
+			char c[1000];
+			while(fgets(c, 1000, ifp) != NULL ){ //reading line by line
+				//printf("Command: %s\n", c);
+
+				int cronPid;	// a new process for every command in the input file
+				cronPid = fork();
+				if (cronPid == 0){
+					char ** newTokens = tokenize(c);
+					int x = 0;
+					int i;
+					if (!strcmp(newTokens[0], "#")) x++;
+
+					time_t t = time(0);   // get time now
+				    struct tm * now = localtime( &t );		// Current system time
+				    //printf ( "Current local time and date: %s", asctime (now));
+				    char minuteNow[10], hourNow[10];
+				    sprintf(minuteNow, "%d", now->tm_min);
+				    sprintf(hourNow, "%d", now->tm_hour);
+
+				    char newCommand[MAXLINE];
+				    strcpy(newCommand,"");
+				    for (i = x+2; newTokens[i]!= NULL; i++){
+				    	strcat(newCommand, newTokens[i]);
+				    	strcat(newCommand, " ");
+				    }
+				    char** newExec = tokenize(newCommand);
+
+					if (!strcmp(newTokens[x], "*") && !strcmp(newTokens[x], "*")){	// every minute execution
+						while(1){
+							//printf("%s\n", newExec[0]);
+							execute_command(newExec);
+							//printf("ksrgfk\n");
+							sleep(60);
+						}
+					} else if (!strcmp(newTokens[x], "*")){
+						if (!strcmp(hourNow, newTokens[x+1])){
+							for (i = now->tm_min; i < 60; i++){
+								execute_command(newExec);
+								//printf("ksrgfk\n");
+								sleep(60);
+							}
+						}
+						while(1){
+							/*
+							 sleepval function for computing sleep and not checking at every minute
+							*/
+							sleep(sleepVal(newTokens[x], newTokens[x+1]));	
+							for (i = 0; i < 60; i++){
+								execute_command(newExec);
+								sleep(60);
+							}
+						}
+					} else{
+						while(1){
+
+							/*
+							 sleepval function for computing sleep and not checking at every minute
+							*/
+
+							sleep(sleepVal(newTokens[x], newTokens[x+1]));
+							execute_command(newExec); // execute process
+						}
+					}
+
+					/* freeing the memory */
+					for(i=0;newTokens[i]!=NULL;i++){ 
+						free(newTokens[i]);
+					}
+					free(newTokens);	
+				}
+				else{
+					//printf("cron Background Process created with pid: %d\n", cronPid);
+				}
+			}
+			fclose(ifp); //closing file stream
+
+
+		}
+		else {
+			//cntBack = 1;
+			//signal(SIGCHLD, sig_child_handler);
+			
+			//back[cntBack++] = pid;
+			//printf("Background Process created with pid: %d\n", pid);
+			int returnStatus; 
+		    //wait(NULL); 
+		      
+		    waitpid(pid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+		    /*
+		   	if (WIFEXITED(returnStatus) && WEXITSTATUS(returnStatus) == 0){
+		   		return 0;  
+		   	}
+		   	else{
+		   		return -1;
+		   	}
+		   	*/
+		   	
+		    if (returnStatus == 0)  // Verify child process terminated without error.  
+		    {
+		      // printf("The child process terminated normally.\n");  
+		      return 0;  
+		    }
+
+		    else
+		    {
+		    	//printf("The child process terminated with an error!.\n");  
+		    	return -1;
+		    }
+		}
+
+		
+		//waitpid(-1, status, 0);
+		//sleep(2);
+		//exit (0) ;
 	} else if (!strcmp(tokens[0],"exit")) {
 		/* Quit the running process */
+		kill(-getpgid(parent_pid), SIGKILL);	// Killing every process
 		exit(0);
 		//return -1;
 	} else if (!strcmp(tokens[0],"cd")) {
@@ -373,7 +561,7 @@ int execute_command(char** tokens) {
 				ifp = fopen(tokens[1], "r"); //opening file for reading
 				if (ifp == NULL) {
 				  perror("File Not found");
-				  exit(1);
+				  exit(-1);
 				}
 				char c[1000];
 				while(fgets(c, 1000, ifp) != NULL ){ //reading line by line
