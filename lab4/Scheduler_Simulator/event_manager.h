@@ -9,13 +9,17 @@ struct event{
 	int end_t;	//event occurrence time 
 	int type;	//event type
 	int pid;	//process id
+	int priority;
+	bool cpuDone;
 };
 
 class comp{
 public:
  	int operator() ( const event& p1, const event &p2)
  	{
- 		return p1.end_t>p2.end_t;
+ 		if(p1.end_t != p2.end_t)
+ 			return p1.end_t>p2.end_t;
+ 		else return p1.priority<p2.priority;
  	}
 };
 
@@ -31,6 +35,9 @@ class event_mgnr {
 		ev.type = type;
 		ev.pid = pid;
 		event_table.push(ev);
+	}
+	void add_event(event x){
+		event_table.push(x);
 	}
 
 	//Is event table empty..?
