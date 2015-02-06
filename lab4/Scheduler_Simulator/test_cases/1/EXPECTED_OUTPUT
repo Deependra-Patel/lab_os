@@ -1,0 +1,30 @@
+PID :: 1  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 11  EVENT :: Process Admitted
+PID :: 1  TIME :: 13  EVENT :: Time slice ended
+PID :: 2  TIME :: 13  EVENT :: CPU started
+PID :: 2  TIME :: 17  EVENT :: CPU burst completed
+PID :: 2  TIME :: 17  EVENT :: IO started
+PID :: 1  TIME :: 17  EVENT :: CPU started
+PID :: 1  TIME :: 19  EVENT :: CPU burst completed
+PID :: 1  TIME :: 19  EVENT :: IO started
+PID :: 2  TIME :: 22  EVENT :: IO burst completed
+PID :: 2  TIME :: 22  EVENT :: CPU started
+PID :: 1  TIME :: 22  EVENT :: IO burst completed
+PID :: 2  TIME :: 28  EVENT :: CPU burst completed
+PID :: 2  TIME :: 28  EVENT :: IO started
+PID :: 1  TIME :: 28  EVENT :: CPU started
+PID :: 1  TIME :: 34  EVENT :: CPU burst completed
+PID :: 1  TIME :: 34  EVENT :: IO started
+PID :: 2  TIME :: 35  EVENT :: IO burst completed
+PID :: 2  TIME :: 35  EVENT :: CPU started
+PID :: 1  TIME :: 38  EVENT :: IO burst completed
+PID :: 2  TIME :: 43  EVENT :: CPU burst completed
+PID :: 2  TIME :: 43  EVENT :: IO started
+PID :: 1  TIME :: 43  EVENT :: CPU started
+PID :: 1  TIME :: 49  EVENT :: CPU burst completed
+PID :: 1  TIME :: 49  EVENT :: IO started
+PID :: 2  TIME :: 52  EVENT :: IO burst completed
+PID :: 2  TIME :: 52  EVENT :: Process terminated
+PID :: 1  TIME :: 53  EVENT :: IO burst completed
+PID :: 1  TIME :: 53  EVENT :: Process terminated

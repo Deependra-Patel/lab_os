@@ -1,0 +1,50 @@
+PID :: 1  TIME :: 2  EVENT :: Process Admitted
+PID :: 1  TIME :: 2  EVENT :: CPU started
+PID :: 2  TIME :: 10  EVENT :: Process Admitted
+PID :: 1  TIME :: 21  EVENT :: CPU burst completed
+PID :: 1  TIME :: 21  EVENT :: IO started
+PID :: 2  TIME :: 21  EVENT :: CPU started
+PID :: 1  TIME :: 38  EVENT :: IO burst completed
+PID :: 2  TIME :: 38  EVENT :: Process pre-empted
+PID :: 1  TIME :: 38  EVENT :: CPU started
+PID :: 1  TIME :: 78  EVENT :: CPU burst completed
+PID :: 1  TIME :: 78  EVENT :: IO started
+PID :: 2  TIME :: 78  EVENT :: CPU started
+PID :: 2  TIME :: 106  EVENT :: CPU burst completed
+PID :: 2  TIME :: 106  EVENT :: IO started
+PID :: 1  TIME :: 108  EVENT :: IO burst completed
+PID :: 1  TIME :: 108  EVENT :: CPU started
+PID :: 2  TIME :: 111  EVENT :: IO burst completed
+PID :: 1  TIME :: 148  EVENT :: CPU burst completed
+PID :: 1  TIME :: 148  EVENT :: IO started
+PID :: 2  TIME :: 148  EVENT :: CPU started
+PID :: 1  TIME :: 178  EVENT :: IO burst completed
+PID :: 1  TIME :: 178  EVENT :: Process terminated
+PID :: 2  TIME :: 208  EVENT :: CPU burst completed
+PID :: 2  TIME :: 208  EVENT :: IO started
+PID :: 2  TIME :: 221  EVENT :: IO burst completed
+PID :: 2  TIME :: 221  EVENT :: CPU started
+PID :: 2  TIME :: 281  EVENT :: CPU burst completed
+PID :: 2  TIME :: 281  EVENT :: IO started
+PID :: 2  TIME :: 294  EVENT :: IO burst completed
+PID :: 2  TIME :: 294  EVENT :: CPU started
+PID :: 2  TIME :: 354  EVENT :: CPU burst completed
+PID :: 2  TIME :: 354  EVENT :: IO started
+PID :: 2  TIME :: 367  EVENT :: IO burst completed
+PID :: 2  TIME :: 367  EVENT :: CPU started
+PID :: 2  TIME :: 380  EVENT :: CPU burst completed
+PID :: 2  TIME :: 380  EVENT :: IO started
+PID :: 2  TIME :: 389  EVENT :: IO burst completed
+PID :: 2  TIME :: 389  EVENT :: CPU started
+PID :: 2  TIME :: 402  EVENT :: CPU burst completed
+PID :: 2  TIME :: 402  EVENT :: IO started
+PID :: 2  TIME :: 411  EVENT :: IO burst completed
+PID :: 2  TIME :: 411  EVENT :: CPU started
+PID :: 2  TIME :: 424  EVENT :: CPU burst completed
+PID :: 2  TIME :: 424  EVENT :: IO started
+PID :: 2  TIME :: 433  EVENT :: IO burst completed
+PID :: 2  TIME :: 433  EVENT :: CPU started
+PID :: 2  TIME :: 446  EVENT :: CPU burst completed
+PID :: 2  TIME :: 446  EVENT :: IO started
+PID :: 2  TIME :: 455  EVENT :: IO burst completed
+PID :: 2  TIME :: 455  EVENT :: Process terminated

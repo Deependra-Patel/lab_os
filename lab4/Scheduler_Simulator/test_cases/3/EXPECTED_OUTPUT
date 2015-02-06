@@ -1,0 +1,20 @@
+PID :: 1  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 4  EVENT :: Process Admitted
+PID :: 1  TIME :: 4  EVENT :: Process pre-empted
+PID :: 2  TIME :: 4  EVENT :: CPU started
+PID :: 2  TIME :: 7  EVENT :: CPU burst completed
+PID :: 2  TIME :: 7  EVENT :: IO started
+PID :: 1  TIME :: 7  EVENT :: CPU started
+PID :: 2  TIME :: 11  EVENT :: IO burst completed
+PID :: 1  TIME :: 11  EVENT :: Process pre-empted
+PID :: 2  TIME :: 11  EVENT :: CPU started
+PID :: 2  TIME :: 14  EVENT :: CPU burst completed
+PID :: 2  TIME :: 14  EVENT :: IO started
+PID :: 1  TIME :: 14  EVENT :: CPU started
+PID :: 1  TIME :: 15  EVENT :: CPU burst completed
+PID :: 1  TIME :: 15  EVENT :: IO started
+PID :: 1  TIME :: 17  EVENT :: IO burst completed
+PID :: 1  TIME :: 17  EVENT :: Process terminated
+PID :: 2  TIME :: 18  EVENT :: IO burst completed
+PID :: 2  TIME :: 18  EVENT :: Process terminated

@@ -1,0 +1,82 @@
+PID :: 1  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: CPU started
+PID :: 1  TIME :: 8  EVENT :: Time slice ended
+PID :: 1  TIME :: 8  EVENT :: CPU started
+PID :: 2  TIME :: 11  EVENT :: Process Admitted
+PID :: 1  TIME :: 13  EVENT :: Time slice ended
+PID :: 2  TIME :: 13  EVENT :: CPU started
+PID :: 2  TIME :: 17  EVENT :: CPU burst completed
+PID :: 2  TIME :: 17  EVENT :: IO started
+PID :: 1  TIME :: 17  EVENT :: CPU started
+PID :: 1  TIME :: 19  EVENT :: CPU burst completed
+PID :: 1  TIME :: 19  EVENT :: IO started
+PID :: 2  TIME :: 22  EVENT :: IO burst completed
+PID :: 2  TIME :: 22  EVENT :: CPU started
+PID :: 1  TIME :: 22  EVENT :: IO burst completed
+PID :: 2  TIME :: 27  EVENT :: Time slice ended
+PID :: 1  TIME :: 27  EVENT :: CPU started
+PID :: 1  TIME :: 32  EVENT :: Time slice ended
+PID :: 2  TIME :: 32  EVENT :: CPU started
+PID :: 2  TIME :: 33  EVENT :: CPU burst completed
+PID :: 2  TIME :: 33  EVENT :: IO started
+PID :: 1  TIME :: 33  EVENT :: CPU started
+PID :: 1  TIME :: 38  EVENT :: Time slice ended
+PID :: 1  TIME :: 38  EVENT :: CPU started
+PID :: 2  TIME :: 40  EVENT :: IO burst completed
+PID :: 1  TIME :: 43  EVENT :: Time slice ended
+PID :: 2  TIME :: 43  EVENT :: CPU started
+PID :: 2  TIME :: 48  EVENT :: Time slice ended
+PID :: 1  TIME :: 48  EVENT :: CPU started
+PID :: 1  TIME :: 53  EVENT :: Time slice ended
+PID :: 2  TIME :: 53  EVENT :: CPU started
+PID :: 2  TIME :: 54  EVENT :: CPU burst completed
+PID :: 2  TIME :: 54  EVENT :: IO started
+PID :: 1  TIME :: 54  EVENT :: CPU started
+PID :: 1  TIME :: 56  EVENT :: CPU burst completed
+PID :: 1  TIME :: 56  EVENT :: IO started
+PID :: 1  TIME :: 59  EVENT :: IO burst completed
+PID :: 1  TIME :: 59  EVENT :: CPU started
+PID :: 2  TIME :: 61  EVENT :: IO burst completed
+PID :: 1  TIME :: 64  EVENT :: Time slice ended
+PID :: 2  TIME :: 64  EVENT :: CPU started
+PID :: 2  TIME :: 69  EVENT :: Time slice ended
+PID :: 1  TIME :: 69  EVENT :: CPU started
+PID :: 1  TIME :: 74  EVENT :: Time slice ended
+PID :: 2  TIME :: 74  EVENT :: CPU started
+PID :: 2  TIME :: 75  EVENT :: CPU burst completed
+PID :: 2  TIME :: 75  EVENT :: IO started
+PID :: 1  TIME :: 75  EVENT :: CPU started
+PID :: 1  TIME :: 80  EVENT :: Time slice ended
+PID :: 1  TIME :: 80  EVENT :: CPU started
+PID :: 2  TIME :: 82  EVENT :: IO burst completed
+PID :: 1  TIME :: 85  EVENT :: Time slice ended
+PID :: 2  TIME :: 85  EVENT :: CPU started
+PID :: 2  TIME :: 90  EVENT :: Time slice ended
+PID :: 1  TIME :: 90  EVENT :: CPU started
+PID :: 1  TIME :: 92  EVENT :: CPU burst completed
+PID :: 1  TIME :: 92  EVENT :: IO started
+PID :: 2  TIME :: 92  EVENT :: CPU started
+PID :: 2  TIME :: 95  EVENT :: CPU burst completed
+PID :: 2  TIME :: 95  EVENT :: IO started
+PID :: 1  TIME :: 95  EVENT :: IO burst completed
+PID :: 1  TIME :: 95  EVENT :: Process terminated
+PID :: 2  TIME :: 104  EVENT :: IO burst completed
+PID :: 2  TIME :: 104  EVENT :: CPU started
+PID :: 2  TIME :: 109  EVENT :: Time slice ended
+PID :: 2  TIME :: 109  EVENT :: CPU started
+PID :: 2  TIME :: 112  EVENT :: CPU burst completed
+PID :: 2  TIME :: 112  EVENT :: IO started
+PID :: 2  TIME :: 121  EVENT :: IO burst completed
+PID :: 2  TIME :: 121  EVENT :: CPU started
+PID :: 2  TIME :: 126  EVENT :: Time slice ended
+PID :: 2  TIME :: 126  EVENT :: CPU started
+PID :: 2  TIME :: 129  EVENT :: CPU burst completed
+PID :: 2  TIME :: 129  EVENT :: IO started
+PID :: 2  TIME :: 138  EVENT :: IO burst completed
+PID :: 2  TIME :: 138  EVENT :: CPU started
+PID :: 2  TIME :: 143  EVENT :: Time slice ended
+PID :: 2  TIME :: 143  EVENT :: CPU started
+PID :: 2  TIME :: 146  EVENT :: CPU burst completed
+PID :: 2  TIME :: 146  EVENT :: IO started
+PID :: 2  TIME :: 155  EVENT :: IO burst completed
+PID :: 2  TIME :: 155  EVENT :: Process terminated

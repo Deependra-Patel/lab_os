@@ -1,0 +1,368 @@
+PID :: 3  TIME :: 3  EVENT :: Process Admitted
+PID :: 3  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 10  EVENT :: Process Admitted
+PID :: 3  TIME :: 11  EVENT :: CPU burst completed
+PID :: 3  TIME :: 11  EVENT :: IO started
+PID :: 3  TIME :: 11  EVENT :: Priority promoted to level 12
+PID :: 2  TIME :: 11  EVENT :: CPU started
+PID :: 3  TIME :: 16  EVENT :: IO burst completed
+PID :: 2  TIME :: 16  EVENT :: Process pre-empted
+PID :: 3  TIME :: 16  EVENT :: CPU started
+PID :: 3  TIME :: 24  EVENT :: CPU burst completed
+PID :: 3  TIME :: 24  EVENT :: IO started
+PID :: 2  TIME :: 24  EVENT :: CPU started
+PID :: 3  TIME :: 29  EVENT :: IO burst completed
+PID :: 2  TIME :: 29  EVENT :: Process pre-empted
+PID :: 3  TIME :: 29  EVENT :: CPU started
+PID :: 1  TIME :: 32  EVENT :: Process Admitted
+PID :: 3  TIME :: 37  EVENT :: CPU burst completed
+PID :: 3  TIME :: 37  EVENT :: IO started
+PID :: 1  TIME :: 37  EVENT :: CPU started
+PID :: 3  TIME :: 42  EVENT :: IO burst completed
+PID :: 1  TIME :: 52  EVENT :: Time slice ended
+PID :: 1  TIME :: 52  EVENT :: Priority demoted to level 7
+PID :: 3  TIME :: 52  EVENT :: CPU started
+PID :: 3  TIME :: 60  EVENT :: CPU burst completed
+PID :: 3  TIME :: 60  EVENT :: IO started
+PID :: 1  TIME :: 60  EVENT :: CPU started
+PID :: 1  TIME :: 64  EVENT :: CPU burst completed
+PID :: 1  TIME :: 64  EVENT :: IO started
+PID :: 1  TIME :: 64  EVENT :: Priority promoted to level 12
+PID :: 2  TIME :: 64  EVENT :: CPU started
+PID :: 3  TIME :: 65  EVENT :: IO burst completed
+PID :: 2  TIME :: 65  EVENT :: Process pre-empted
+PID :: 3  TIME :: 65  EVENT :: CPU started
+PID :: 3  TIME :: 73  EVENT :: CPU burst completed
+PID :: 3  TIME :: 73  EVENT :: IO started
+PID :: 2  TIME :: 73  EVENT :: CPU started
+PID :: 3  TIME :: 78  EVENT :: IO burst completed
+PID :: 2  TIME :: 78  EVENT :: Process pre-empted
+PID :: 3  TIME :: 78  EVENT :: CPU started
+PID :: 1  TIME :: 81  EVENT :: IO burst completed
+PID :: 3  TIME :: 86  EVENT :: CPU burst completed
+PID :: 3  TIME :: 86  EVENT :: IO started
+PID :: 1  TIME :: 86  EVENT :: CPU started
+PID :: 3  TIME :: 91  EVENT :: IO burst completed
+PID :: 1  TIME :: 101  EVENT :: Time slice ended
+PID :: 1  TIME :: 101  EVENT :: Priority demoted to level 7
+PID :: 3  TIME :: 101  EVENT :: CPU started
+PID :: 3  TIME :: 116  EVENT :: Time slice ended
+PID :: 3  TIME :: 116  EVENT :: Priority demoted to level 7
+PID :: 1  TIME :: 116  EVENT :: CPU started
+PID :: 1  TIME :: 141  EVENT :: Time slice ended
+PID :: 1  TIME :: 141  EVENT :: Priority demoted to level 3
+PID :: 3  TIME :: 141  EVENT :: CPU started
+PID :: 3  TIME :: 156  EVENT :: CPU burst completed
+PID :: 3  TIME :: 156  EVENT :: IO started
+PID :: 3  TIME :: 156  EVENT :: Priority promoted to level 12
+PID :: 2  TIME :: 156  EVENT :: CPU started
+PID :: 3  TIME :: 172  EVENT :: IO burst completed
+PID :: 2  TIME :: 172  EVENT :: Process pre-empted
+PID :: 3  TIME :: 172  EVENT :: CPU started
+PID :: 3  TIME :: 174  EVENT :: CPU burst completed
+PID :: 3  TIME :: 174  EVENT :: IO started
+PID :: 1  TIME :: 174  EVENT :: CPU started
+PID :: 3  TIME :: 175  EVENT :: IO burst completed
+PID :: 1  TIME :: 175  EVENT :: Process pre-empted
+PID :: 3  TIME :: 175  EVENT :: CPU started
+PID :: 3  TIME :: 177  EVENT :: CPU burst completed
+PID :: 3  TIME :: 177  EVENT :: IO started
+PID :: 2  TIME :: 177  EVENT :: CPU started
+PID :: 3  TIME :: 178  EVENT :: IO burst completed
+PID :: 2  TIME :: 178  EVENT :: Process pre-empted
+PID :: 3  TIME :: 178  EVENT :: CPU started
+PID :: 3  TIME :: 180  EVENT :: CPU burst completed
+PID :: 3  TIME :: 180  EVENT :: IO started
+PID :: 1  TIME :: 180  EVENT :: CPU started
+PID :: 3  TIME :: 181  EVENT :: IO burst completed
+PID :: 1  TIME :: 181  EVENT :: Process pre-empted
+PID :: 3  TIME :: 181  EVENT :: CPU started
+PID :: 3  TIME :: 183  EVENT :: CPU burst completed
+PID :: 3  TIME :: 183  EVENT :: IO started
+PID :: 2  TIME :: 183  EVENT :: CPU started
+PID :: 3  TIME :: 184  EVENT :: IO burst completed
+PID :: 2  TIME :: 184  EVENT :: Process pre-empted
+PID :: 3  TIME :: 184  EVENT :: CPU started
+PID :: 3  TIME :: 186  EVENT :: CPU burst completed
+PID :: 3  TIME :: 186  EVENT :: IO started
+PID :: 1  TIME :: 186  EVENT :: CPU started
+PID :: 3  TIME :: 187  EVENT :: IO burst completed
+PID :: 1  TIME :: 187  EVENT :: Process pre-empted
+PID :: 3  TIME :: 187  EVENT :: CPU started
+PID :: 3  TIME :: 189  EVENT :: CPU burst completed
+PID :: 3  TIME :: 189  EVENT :: IO started
+PID :: 2  TIME :: 189  EVENT :: CPU started
+PID :: 3  TIME :: 190  EVENT :: IO burst completed
+PID :: 2  TIME :: 190  EVENT :: Process pre-empted
+PID :: 3  TIME :: 190  EVENT :: CPU started
+PID :: 3  TIME :: 192  EVENT :: CPU burst completed
+PID :: 3  TIME :: 192  EVENT :: IO started
+PID :: 1  TIME :: 192  EVENT :: CPU started
+PID :: 3  TIME :: 193  EVENT :: IO burst completed
+PID :: 1  TIME :: 193  EVENT :: Process pre-empted
+PID :: 3  TIME :: 193  EVENT :: CPU started
+PID :: 3  TIME :: 195  EVENT :: CPU burst completed
+PID :: 3  TIME :: 195  EVENT :: IO started
+PID :: 2  TIME :: 195  EVENT :: CPU started
+PID :: 3  TIME :: 196  EVENT :: IO burst completed
+PID :: 2  TIME :: 196  EVENT :: Process pre-empted
+PID :: 3  TIME :: 196  EVENT :: CPU started
+PID :: 3  TIME :: 198  EVENT :: CPU burst completed
+PID :: 3  TIME :: 198  EVENT :: IO started
+PID :: 1  TIME :: 198  EVENT :: CPU started
+PID :: 1  TIME :: 199  EVENT :: CPU burst completed
+PID :: 1  TIME :: 199  EVENT :: IO started
+PID :: 1  TIME :: 199  EVENT :: Priority promoted to level 7
+PID :: 2  TIME :: 199  EVENT :: CPU started
+PID :: 3  TIME :: 199  EVENT :: IO burst completed
+PID :: 2  TIME :: 199  EVENT :: Process pre-empted
+PID :: 3  TIME :: 199  EVENT :: CPU started
+PID :: 3  TIME :: 201  EVENT :: CPU burst completed
+PID :: 3  TIME :: 201  EVENT :: IO started
+PID :: 2  TIME :: 201  EVENT :: CPU started
+PID :: 3  TIME :: 202  EVENT :: IO burst completed
+PID :: 2  TIME :: 202  EVENT :: Process pre-empted
+PID :: 3  TIME :: 202  EVENT :: CPU started
+PID :: 3  TIME :: 204  EVENT :: CPU burst completed
+PID :: 3  TIME :: 204  EVENT :: IO started
+PID :: 2  TIME :: 204  EVENT :: CPU started
+PID :: 3  TIME :: 205  EVENT :: IO burst completed
+PID :: 2  TIME :: 205  EVENT :: Process pre-empted
+PID :: 3  TIME :: 205  EVENT :: CPU started
+PID :: 3  TIME :: 207  EVENT :: CPU burst completed
+PID :: 3  TIME :: 207  EVENT :: IO started
+PID :: 2  TIME :: 207  EVENT :: CPU started
+PID :: 3  TIME :: 208  EVENT :: IO burst completed
+PID :: 2  TIME :: 208  EVENT :: Process pre-empted
+PID :: 3  TIME :: 208  EVENT :: CPU started
+PID :: 3  TIME :: 210  EVENT :: CPU burst completed
+PID :: 3  TIME :: 210  EVENT :: IO started
+PID :: 2  TIME :: 210  EVENT :: CPU started
+PID :: 3  TIME :: 211  EVENT :: IO burst completed
+PID :: 2  TIME :: 211  EVENT :: Process pre-empted
+PID :: 3  TIME :: 211  EVENT :: CPU started
+PID :: 3  TIME :: 213  EVENT :: CPU burst completed
+PID :: 3  TIME :: 213  EVENT :: IO started
+PID :: 2  TIME :: 213  EVENT :: CPU started
+PID :: 3  TIME :: 214  EVENT :: IO burst completed
+PID :: 2  TIME :: 214  EVENT :: Process pre-empted
+PID :: 3  TIME :: 214  EVENT :: CPU started
+PID :: 3  TIME :: 216  EVENT :: CPU burst completed
+PID :: 3  TIME :: 216  EVENT :: IO started
+PID :: 2  TIME :: 216  EVENT :: CPU started
+PID :: 3  TIME :: 217  EVENT :: IO burst completed
+PID :: 2  TIME :: 217  EVENT :: Process pre-empted
+PID :: 3  TIME :: 217  EVENT :: CPU started
+PID :: 3  TIME :: 219  EVENT :: CPU burst completed
+PID :: 3  TIME :: 219  EVENT :: IO started
+PID :: 2  TIME :: 219  EVENT :: CPU started
+PID :: 3  TIME :: 220  EVENT :: IO burst completed
+PID :: 2  TIME :: 220  EVENT :: Process pre-empted
+PID :: 3  TIME :: 220  EVENT :: CPU started
+PID :: 3  TIME :: 222  EVENT :: CPU burst completed
+PID :: 3  TIME :: 222  EVENT :: IO started
+PID :: 2  TIME :: 222  EVENT :: CPU started
+PID :: 3  TIME :: 223  EVENT :: IO burst completed
+PID :: 2  TIME :: 223  EVENT :: Process pre-empted
+PID :: 3  TIME :: 223  EVENT :: CPU started
+PID :: 3  TIME :: 225  EVENT :: CPU burst completed
+PID :: 3  TIME :: 225  EVENT :: IO started
+PID :: 2  TIME :: 225  EVENT :: CPU started
+PID :: 2  TIME :: 226  EVENT :: CPU burst completed
+PID :: 2  TIME :: 226  EVENT :: IO started
+PID :: 2  TIME :: 226  EVENT :: Priority promoted to level 7
+PID :: 3  TIME :: 226  EVENT :: IO burst completed
+PID :: 3  TIME :: 226  EVENT :: CPU started
+PID :: 3  TIME :: 228  EVENT :: CPU burst completed
+PID :: 3  TIME :: 228  EVENT :: IO started
+PID :: 1  TIME :: 229  EVENT :: IO burst completed
+PID :: 1  TIME :: 229  EVENT :: CPU started
+PID :: 3  TIME :: 229  EVENT :: IO burst completed
+PID :: 1  TIME :: 229  EVENT :: Process pre-empted
+PID :: 3  TIME :: 229  EVENT :: CPU started
+PID :: 3  TIME :: 231  EVENT :: CPU burst completed
+PID :: 3  TIME :: 231  EVENT :: IO started
+PID :: 1  TIME :: 231  EVENT :: CPU started
+PID :: 2  TIME :: 231  EVENT :: IO burst completed
+PID :: 3  TIME :: 232  EVENT :: IO burst completed
+PID :: 1  TIME :: 232  EVENT :: Process pre-empted
+PID :: 3  TIME :: 232  EVENT :: CPU started
+PID :: 3  TIME :: 234  EVENT :: CPU burst completed
+PID :: 3  TIME :: 234  EVENT :: IO started
+PID :: 2  TIME :: 234  EVENT :: CPU started
+PID :: 3  TIME :: 235  EVENT :: IO burst completed
+PID :: 2  TIME :: 235  EVENT :: Process pre-empted
+PID :: 3  TIME :: 235  EVENT :: CPU started
+PID :: 3  TIME :: 237  EVENT :: CPU burst completed
+PID :: 3  TIME :: 237  EVENT :: IO started
+PID :: 1  TIME :: 237  EVENT :: CPU started
+PID :: 3  TIME :: 238  EVENT :: IO burst completed
+PID :: 1  TIME :: 238  EVENT :: Process pre-empted
+PID :: 3  TIME :: 238  EVENT :: CPU started
+PID :: 3  TIME :: 240  EVENT :: CPU burst completed
+PID :: 3  TIME :: 240  EVENT :: IO started
+PID :: 2  TIME :: 240  EVENT :: CPU started
+PID :: 3  TIME :: 241  EVENT :: IO burst completed
+PID :: 2  TIME :: 241  EVENT :: Process pre-empted
+PID :: 3  TIME :: 241  EVENT :: CPU started
+PID :: 3  TIME :: 243  EVENT :: CPU burst completed
+PID :: 3  TIME :: 243  EVENT :: IO started
+PID :: 1  TIME :: 243  EVENT :: CPU started
+PID :: 3  TIME :: 244  EVENT :: IO burst completed
+PID :: 1  TIME :: 244  EVENT :: Process pre-empted
+PID :: 3  TIME :: 244  EVENT :: CPU started
+PID :: 3  TIME :: 246  EVENT :: CPU burst completed
+PID :: 3  TIME :: 246  EVENT :: IO started
+PID :: 2  TIME :: 246  EVENT :: CPU started
+PID :: 3  TIME :: 247  EVENT :: IO burst completed
+PID :: 2  TIME :: 247  EVENT :: Process pre-empted
+PID :: 3  TIME :: 247  EVENT :: CPU started
+PID :: 3  TIME :: 249  EVENT :: CPU burst completed
+PID :: 3  TIME :: 249  EVENT :: IO started
+PID :: 1  TIME :: 249  EVENT :: CPU started
+PID :: 3  TIME :: 250  EVENT :: IO burst completed
+PID :: 1  TIME :: 250  EVENT :: Process pre-empted
+PID :: 3  TIME :: 250  EVENT :: CPU started
+PID :: 3  TIME :: 252  EVENT :: CPU burst completed
+PID :: 3  TIME :: 252  EVENT :: IO started
+PID :: 2  TIME :: 252  EVENT :: CPU started
+PID :: 3  TIME :: 253  EVENT :: IO burst completed
+PID :: 2  TIME :: 253  EVENT :: Process pre-empted
+PID :: 3  TIME :: 253  EVENT :: CPU started
+PID :: 3  TIME :: 255  EVENT :: CPU burst completed
+PID :: 3  TIME :: 255  EVENT :: IO started
+PID :: 1  TIME :: 255  EVENT :: CPU started
+PID :: 3  TIME :: 256  EVENT :: IO burst completed
+PID :: 1  TIME :: 256  EVENT :: Process pre-empted
+PID :: 3  TIME :: 256  EVENT :: CPU started
+PID :: 3  TIME :: 258  EVENT :: CPU burst completed
+PID :: 3  TIME :: 258  EVENT :: IO started
+PID :: 2  TIME :: 258  EVENT :: CPU started
+PID :: 3  TIME :: 259  EVENT :: IO burst completed
+PID :: 2  TIME :: 259  EVENT :: Process pre-empted
+PID :: 3  TIME :: 259  EVENT :: CPU started
+PID :: 3  TIME :: 261  EVENT :: CPU burst completed
+PID :: 3  TIME :: 261  EVENT :: IO started
+PID :: 1  TIME :: 261  EVENT :: CPU started
+PID :: 3  TIME :: 262  EVENT :: IO burst completed
+PID :: 1  TIME :: 262  EVENT :: Process pre-empted
+PID :: 3  TIME :: 262  EVENT :: CPU started
+PID :: 3  TIME :: 264  EVENT :: CPU burst completed
+PID :: 3  TIME :: 264  EVENT :: IO started
+PID :: 2  TIME :: 264  EVENT :: CPU started
+PID :: 3  TIME :: 265  EVENT :: IO burst completed
+PID :: 2  TIME :: 265  EVENT :: Process pre-empted
+PID :: 3  TIME :: 265  EVENT :: CPU started
+PID :: 3  TIME :: 267  EVENT :: CPU burst completed
+PID :: 3  TIME :: 267  EVENT :: IO started
+PID :: 1  TIME :: 267  EVENT :: CPU started
+PID :: 3  TIME :: 268  EVENT :: IO burst completed
+PID :: 1  TIME :: 268  EVENT :: Process pre-empted
+PID :: 3  TIME :: 268  EVENT :: CPU started
+PID :: 3  TIME :: 270  EVENT :: CPU burst completed
+PID :: 3  TIME :: 270  EVENT :: IO started
+PID :: 2  TIME :: 270  EVENT :: CPU started
+PID :: 3  TIME :: 271  EVENT :: IO burst completed
+PID :: 2  TIME :: 271  EVENT :: Process pre-empted
+PID :: 3  TIME :: 271  EVENT :: CPU started
+PID :: 3  TIME :: 273  EVENT :: CPU burst completed
+PID :: 3  TIME :: 273  EVENT :: IO started
+PID :: 1  TIME :: 273  EVENT :: CPU started
+PID :: 3  TIME :: 274  EVENT :: IO burst completed
+PID :: 1  TIME :: 274  EVENT :: Process pre-empted
+PID :: 3  TIME :: 274  EVENT :: CPU started
+PID :: 3  TIME :: 276  EVENT :: CPU burst completed
+PID :: 3  TIME :: 276  EVENT :: IO started
+PID :: 2  TIME :: 276  EVENT :: CPU started
+PID :: 3  TIME :: 277  EVENT :: IO burst completed
+PID :: 2  TIME :: 277  EVENT :: Process pre-empted
+PID :: 3  TIME :: 277  EVENT :: CPU started
+PID :: 3  TIME :: 279  EVENT :: CPU burst completed
+PID :: 3  TIME :: 279  EVENT :: IO started
+PID :: 1  TIME :: 279  EVENT :: CPU started
+PID :: 3  TIME :: 280  EVENT :: IO burst completed
+PID :: 1  TIME :: 280  EVENT :: Process pre-empted
+PID :: 3  TIME :: 280  EVENT :: CPU started
+PID :: 3  TIME :: 282  EVENT :: CPU burst completed
+PID :: 3  TIME :: 282  EVENT :: IO started
+PID :: 2  TIME :: 282  EVENT :: CPU started
+PID :: 3  TIME :: 283  EVENT :: IO burst completed
+PID :: 2  TIME :: 283  EVENT :: Process pre-empted
+PID :: 3  TIME :: 283  EVENT :: CPU started
+PID :: 3  TIME :: 285  EVENT :: CPU burst completed
+PID :: 3  TIME :: 285  EVENT :: IO started
+PID :: 1  TIME :: 285  EVENT :: CPU started
+PID :: 3  TIME :: 286  EVENT :: IO burst completed
+PID :: 1  TIME :: 286  EVENT :: Process pre-empted
+PID :: 3  TIME :: 286  EVENT :: CPU started
+PID :: 3  TIME :: 288  EVENT :: CPU burst completed
+PID :: 3  TIME :: 288  EVENT :: IO started
+PID :: 2  TIME :: 288  EVENT :: CPU started
+PID :: 3  TIME :: 289  EVENT :: IO burst completed
+PID :: 2  TIME :: 289  EVENT :: Process pre-empted
+PID :: 3  TIME :: 289  EVENT :: CPU started
+PID :: 3  TIME :: 291  EVENT :: CPU burst completed
+PID :: 3  TIME :: 291  EVENT :: IO started
+PID :: 1  TIME :: 291  EVENT :: CPU started
+PID :: 3  TIME :: 292  EVENT :: IO burst completed
+PID :: 1  TIME :: 292  EVENT :: Process pre-empted
+PID :: 3  TIME :: 292  EVENT :: CPU started
+PID :: 3  TIME :: 293  EVENT :: CPU burst completed
+PID :: 3  TIME :: 293  EVENT :: IO started
+PID :: 2  TIME :: 293  EVENT :: CPU started
+PID :: 3  TIME :: 313  EVENT :: IO burst completed
+PID :: 3  TIME :: 313  EVENT :: Process terminated
+PID :: 2  TIME :: 318  EVENT :: Time slice ended
+PID :: 2  TIME :: 318  EVENT :: Priority demoted to level 3
+PID :: 1  TIME :: 318  EVENT :: CPU started
+PID :: 1  TIME :: 343  EVENT :: Time slice ended
+PID :: 1  TIME :: 343  EVENT :: Priority demoted to level 3
+PID :: 2  TIME :: 343  EVENT :: CPU started
+PID :: 2  TIME :: 368  EVENT :: CPU burst completed
+PID :: 2  TIME :: 368  EVENT :: IO started
+PID :: 2  TIME :: 368  EVENT :: Priority promoted to level 7
+PID :: 1  TIME :: 368  EVENT :: CPU started
+PID :: 1  TIME :: 377  EVENT :: CPU burst completed
+PID :: 1  TIME :: 377  EVENT :: IO started
+PID :: 1  TIME :: 377  EVENT :: Priority promoted to level 7
+PID :: 2  TIME :: 381  EVENT :: IO burst completed
+PID :: 2  TIME :: 381  EVENT :: CPU started
+PID :: 2  TIME :: 406  EVENT :: Time slice ended
+PID :: 2  TIME :: 406  EVENT :: Priority demoted to level 3
+PID :: 2  TIME :: 406  EVENT :: CPU started
+PID :: 1  TIME :: 407  EVENT :: IO burst completed
+PID :: 1  TIME :: 407  EVENT :: Process terminated
+PID :: 2  TIME :: 436  EVENT :: Time slice ended
+PID :: 2  TIME :: 436  EVENT :: CPU started
+PID :: 2  TIME :: 441  EVENT :: CPU burst completed
+PID :: 2  TIME :: 441  EVENT :: IO started
+PID :: 2  TIME :: 441  EVENT :: Priority promoted to level 7
+PID :: 2  TIME :: 454  EVENT :: IO burst completed
+PID :: 2  TIME :: 454  EVENT :: CPU started
+PID :: 2  TIME :: 479  EVENT :: Time slice ended
+PID :: 2  TIME :: 479  EVENT :: Priority demoted to level 3
+PID :: 2  TIME :: 479  EVENT :: CPU started
+PID :: 2  TIME :: 509  EVENT :: Time slice ended
+PID :: 2  TIME :: 509  EVENT :: CPU started
+PID :: 2  TIME :: 514  EVENT :: CPU burst completed
+PID :: 2  TIME :: 514  EVENT :: IO started
+PID :: 2  TIME :: 514  EVENT :: Priority promoted to level 7
+PID :: 2  TIME :: 527  EVENT :: IO burst completed
+PID :: 2  TIME :: 527  EVENT :: CPU started
+PID :: 2  TIME :: 540  EVENT :: CPU burst completed
+PID :: 2  TIME :: 540  EVENT :: IO started
+PID :: 2  TIME :: 540  EVENT :: Priority promoted to level 12
+PID :: 2  TIME :: 549  EVENT :: IO burst completed
+PID :: 2  TIME :: 549  EVENT :: CPU started
+PID :: 2  TIME :: 562  EVENT :: CPU burst completed
+PID :: 2  TIME :: 562  EVENT :: IO started
+PID :: 2  TIME :: 571  EVENT :: IO burst completed
+PID :: 2  TIME :: 571  EVENT :: CPU started
+PID :: 2  TIME :: 584  EVENT :: CPU burst completed
+PID :: 2  TIME :: 584  EVENT :: IO started
+PID :: 2  TIME :: 593  EVENT :: IO burst completed
+PID :: 2  TIME :: 593  EVENT :: CPU started
+PID :: 2  TIME :: 606  EVENT :: CPU burst completed
+PID :: 2  TIME :: 606  EVENT :: IO started
+PID :: 2  TIME :: 615  EVENT :: IO burst completed
+PID :: 2  TIME :: 615  EVENT :: Process terminated
