@@ -98,7 +98,7 @@ void Hardware_Shutdown() {
     Out_Byte(0x8900, 'n');
 }
 
-static void Authentication_Handler(){//(ulong_t arg __attribute__ ((unused))){
+static void Authentication_Handler(ulong_t arg __attribute__ ((unused))){
     struct File * passwordFile;
     Open("/c/Password.txt", 0, &passwordFile);
     char pass[1024];
