@@ -289,11 +289,11 @@ int execute_command(char** tokens) {
 		//runBack = 1;
 		if ((pid = fork()) == 0){
 			//cntBack = 1;
-			/*
+			
 			if (sigignore(SIGINT) == SIG_ERR)		// Upon receiving a SIGINT, the signal calls the handler sig_handler
 		        printf("\ncan't remove SIGINT\n");
 			if (sigignore(SIGQUIT) == SIG_ERR)		// Upon receiving a SIGINT, the signal calls the handler sig_handler
-		        printf("\ncan't remove SIGQUIT\n");	*/	    
+		        printf("\ncan't remove SIGQUIT\n");		    
 			execute_command(tokens);
 			//signal(SIGINT, SIG_IGN);
 			//signal(SIGQUIT, SIG_IGN);

@@ -1,0 +1,18 @@
+PID :: 1  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: Process pre-empted
+PID :: 2  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 4  EVENT :: Time slice ended
+PID :: 2  TIME :: 4  EVENT :: Priority demoted to level 1
+PID :: 1  TIME :: 4  EVENT :: CPU started
+PID :: 1  TIME :: 5  EVENT :: CPU burst completed
+PID :: 1  TIME :: 5  EVENT :: IO started
+PID :: 1  TIME :: 5  EVENT :: Priority promoted to level 2
+PID :: 2  TIME :: 5  EVENT :: CPU started
+PID :: 2  TIME :: 7  EVENT :: CPU burst completed
+PID :: 2  TIME :: 7  EVENT :: IO started
+PID :: 1  TIME :: 8  EVENT :: IO burst completed
+PID :: 1  TIME :: 8  EVENT :: Process terminated
+PID :: 2  TIME :: 8  EVENT :: IO burst completed
+PID :: 2  TIME :: 8  EVENT :: Process terminated

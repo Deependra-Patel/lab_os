@@ -1,0 +1,14 @@
+PID :: 1  TIME :: 3  EVENT :: Process Admitted
+PID :: 1  TIME :: 3  EVENT :: CPU started
+PID :: 2  TIME :: 3  EVENT :: Process Admitted
+PID :: 2  TIME :: 4  EVENT :: CPU started
+PID :: 1  TIME :: 4  EVENT :: CPU burst completed
+PID :: 1  TIME :: 4  EVENT :: IO started
+PID :: 2  TIME :: 6  EVENT :: Time slice ended
+PID :: 2  TIME :: 6  EVENT :: CPU started
+PID :: 1  TIME :: 7  EVENT :: IO burst completed
+PID :: 1  TIME :: 7  EVENT :: Process terminated
+PID :: 2  TIME :: 7  EVENT :: CPU burst completed
+PID :: 2  TIME :: 7  EVENT :: IO started
+PID :: 2  TIME :: 8  EVENT :: IO burst completed
+PID :: 2  TIME :: 8  EVENT :: Process terminated
