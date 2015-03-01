@@ -99,6 +99,54 @@ void Hardware_Shutdown() {
     Out_Byte(0x8900, 'n');
 }
 
+static void Authentication_Handler(){//(ulong_t arg __attribute__ ((unused))){
+    struct File * passwordFile;
+    Open("/c/Password.txt", 0, &passwordFile);
+    char pass[1024];
+    Read(passwordFile, pass, 1024);
+    //Print(pass);
+    while(1){
+        Print("Enter Password: ");
+        char buff[1024];
+        int i = 0;
+        Keycode k;
+        do{
+            k = (Keycode) Wait_For_Key();
+            if ((k & KEY_SPECIAL_FLAG) || (k & KEY_RELEASE_FLAG))
+                continue;
+            if (k == '\r')
+                k = '\n';
+            k &= 0xff;
+            
+            if(k == '\n'){
+                Put_Char('\n');
+                buff[i++] = '\n';
+                buff[i++] = '\0';
+                break;
+            }
+            Put_Char('*');
+            buff[i++] = k;
+        }while(true);
+
+        // Print("%s", buff);
+        // Print("%s", pass);
+
+        if (!strcmp(pass, buff)){
+            // return true; // 
+            Print("Welcome user!\n");
+            return;
+        } else{
+            Print("Incorrect Password! Try Again.\n"); 
+        }
+    }
+}
+
+void Authenticate(){
+    struct Kernel_Thread *initProcess = Start_Kernel_Thread(Authentication_Handler, 0, PRIORITY_NORMAL, false, "{Authentication_Handler}");
+    int exitCode = Join(initProcess);
+}
+
+
 void Main(struct Boot_Info *bootInfo) {
     Init_BSS();
     Init_Screen();
@@ -111,6 +159,7 @@ void Main(struct Boot_Info *bootInfo) {
     Init_SMP();
     TODO_P(PROJECT_VIRTUAL_MEMORY_A,
            "initialize virtual memory page tables.");
+
     Init_Scheduler(0, (void *)KERN_STACK);
     Init_Traps();
     Init_Local_APIC(0);
@@ -141,12 +190,19 @@ void Main(struct Boot_Info *bootInfo) {
     Init_Sound_Devices();
     /* End sound init */
 
+
     Mount_Root_Filesystem();
+
+    Authenticate();
+
 
     TODO_P(PROJECT_VIRTUAL_MEMORY_A, "initialize page file.");
 
     Set_Current_Attr(ATTRIB(BLACK, GREEN | BRIGHT));
+        
+
     Print("Welcome to GeekOS!\n");
+
     Set_Current_Attr(ATTRIB(BLACK, GRAY));
 
     TODO_P(PROJECT_SOUND, "play startup sound");
@@ -159,8 +215,6 @@ void Main(struct Boot_Info *bootInfo) {
     /* we should not get here */
 }
 
-
-
 static void Mount_Root_Filesystem(void) {
     if (Mount(ROOT_DEVICE, ROOT_PREFIX, "pfat") != 0)
         Print("Failed to mount /" ROOT_PREFIX " filesystem\n");
@@ -168,11 +222,6 @@ static void Mount_Root_Filesystem(void) {
         Print("Mounted /" ROOT_PREFIX " filesystem!\n");
 
 }
-
-
-
-
-
 
 static void Spawn_Init_Process(void) {
     int rc;
