@@ -1,0 +1,169 @@
+Question 1:
+Boot Process is started from GeekOS/src/geekos/main.c. There are many function calls are there in
+main.c . Give a brief decription for each of the function call and where is that function defined.
+(Make yourself familar with those functions as some basic questions will be asked about those
+functions .)
+(Hint: See All the header files inherited by main.c and search for function definition. Or Try to use
+cscope for this purpose.)
+
+
+Answer: 
+
+1. Init_BSS();
+	 Sets bss to zero. bss is better save image where unitialized variables are stored;
+	 Defined in mem.c
+
+2.	Init_Screen():
+	Initializes the screen module.
+	Defined in screen.c and declared in screen.h
+
+3. 	Init_Mem(bootInfo);
+	Initialize memory management data structures. Enables the use of Alloc_Page() and Free_Page() functions.
+	Defined in mem.c
+
+4. Init_CRC32();
+	This routine writes each crc_table entry exactly once, with the correct final value.  Thus, it is safe to call even on a table that someone else is using concurrently.CRC table is used for error detection.
+	Defined in crc.c
+
+
+5.	Init_TSS();
+	Initializes the kernel TSS. This must be done after the memory and GDT(Global Descriptor Table) initialization, but before the scheduler is started.
+	Defined in tss.c
+
+6.	lockKernel();
+	Implements coarse grained kernel locks.  The functions lockKernel and unlockKernel will be called whenever interrupts are enabled or disabled. 
+	Defined in smp.c
+
+
+7.	Init_Interrupts(0);
+	Initialize the interrupt system. Initialize all entries of the handler table with a dummy handler. This will ensure that we always have a handler function to call.
+	Defined in int.c
+
+
+8.	Init_SMP();
+    Initializes symmetric multiprocessing for multi core systems.
+	Defined in smp.c
+
+
+9.	TODO_P(PROJECT_VIRTUAL_MEMORY_A,
+           "initialize virtual memory page tables.");
+    
+    Macro, not a function used for printing
+    defined in include/geekos/projects.h
+
+10.	Init_Scheduler(0, (void *)KERN_STACK);
+    Creates kernel thread for main and starts it
+	Defined in kthread.c
+
+
+11.	Init_Traps(void) :
+	Initializes handlers for processor traps (e.g. stack exception and general protection faults).
+    Defined in trap.c and declared in trap.h
+
+
+12. Init_Local_APIC(0);
+	Sets up local APIC including calibrating its timer register(Advanced Programmable Interrupt controller)
+	Defined in smp.c
+
+13.	Init_Timer();
+	Installs an interrupt handler for the timer interrupts and initialises it
+	Defined in timer.c
+
+14.	Init_Keyboard(void);
+	Make arrangements for the keyboard event: disables all shift keys, makes the buffer empty and installs interrupt handler.
+	Defined in keyboard.c and declared in keyboard.h
+
+15.	Init_DMA();
+	Initialises IDE controller
+	Defined in dma.c
+    
+16.	Init_IDE();
+	Initialises IDE controller
+	Defined in ide.c
+
+    Init_PFAT();
+    Registers pfat file system 
+	Defined in pfat.c
+
+    Init_GFS2();
+    Registers gfs2 file system 
+	Defined in gfs2.c
+
+    Init_GOSFS();
+    Registers gosfs file system 
+	Defined in gosfs.c
+
+    
+	Init_CFS(void) ;
+	Registers a cfs type filesystem. This should be called before any processes are started.
+	Defined in cfs.c
+
+
+	Init_Alarm(void);
+	Starts a new kernel thread (kernel-mode-only thread) with the function to be called by the new thread as Alarm_handler, 0 arguments for this function and with normal priority.
+	Defined in alarm.c and declared in alarm.h
+
+
+    Release_SMP();
+    Releases resources to symmetric multiprocessing
+	Defined in smp.c
+
+    Init_Network_Devices();
+    Initializes network devices found on hardware
+	Defined in net/net.c
+
+    Init_ARP_Protocol();
+    Prepares arp table for network communication
+	Defined in net/arp.c
+    
+    Init_IP();
+    Initialises the ip of the machine 
+	Defined in net/ip.c
+    
+    Init_Routing();
+    Initialises the routing table with all local routes
+	Defined in ip/routing.c
+    
+    Init_Sockets();
+    Initialises sockets of hardware
+	Defined in net/socket.c
+    
+    Init_RIP();
+    Initiates RIP protocol
+	Defined in net/rip.c
+    
+    Init_Sound_Devices();
+    Initializes sound hardware.
+	Defined in sound.c
+
+    Mount_Root_Filesystem();
+    Mounts the file system of the hardware for use
+	Defined in main.c
+
+    TODO_P(PROJECT_VIRTUAL_MEMORY_A, "initialize page file.");
+    Macro, not a function used for printing
+    Defined in include/geekos/projects.h
+
+    Set_Current_Attr(ATTRIB(BLACK, GREEN | BRIGHT));
+    Sets the current character attribute
+	Defined in screen.c
+
+    Print("Welcome to GeekOS!\n");
+    Prints the text on screen
+	Defined in screen.c
+
+    Set_Current_Attr(ATTRIB(BLACK, GRAY));
+    Sets the current character attribute
+	Defined in screen.c
+
+    TODO_P(PROJECT_SOUND, "play startup sound");
+	Macro, not a function used for printing
+    Defined in include/geekos/projects.h
+
+    Spawn_Init_Process();
+    loads and run shell.exe 
+	Defined in main.c
+
+    Hardware_Shutdown();
+    shuts down the hardware
+	Defined in main.c
