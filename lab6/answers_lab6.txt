@@ -10,7 +10,7 @@ cscope for this purpose.)
 Answer: 
 
 1. Init_BSS();
-     Sets bss to zero. bss is better save image where unitialized variables are stored;
+     Sets bss to zero. bss (better save image) is the portion of memory where unitialized variables are stored;
      Defined in mem.c
 
 2.  Init_Screen():
@@ -213,10 +213,14 @@ Answer:
     const void *tlocalData[MAX_TLOCAL_KEYS];    //
     char threadName[20];  // Stores name of the thread
 
+
+
 Question 3: Many operating systems do not use terms “Kernel Thread and User Thread”strictly. So we have to study kernel threads of Geek-OS and decide whether it is a kernel-level thread or user-level thread. Give proper reasons for your answer. (Refer Class notes to get the difference between User Thread and Kernel Thread) 
 
 Answer:
     GeekOs doesn’t distinguish between kernel level threads and user level thread. Both the threads are inserted into the All_Thread_List struct which is used by scheduler for scheduling. User level threads gets the priority of the parent process creating it. On the other hand, priorities of kernel level threads can be set while creating. While creating user thread, the context of the parent process is copied into the child process.
+
+
 
 Question 4: In Question 2, you are waiting for the keyboard input i.e waiting for an I/O.Say, how is a process put to sleep or activated when it is engaged in doing I/O? (Describe from both I/O as well as scheduling point of view.)
 
@@ -225,7 +229,35 @@ If the process is waiting for an I/O, then the thread is added in a wait queue, 
 
     When a keyboard event occurs, the interrupt handler(Keyboard_Interrupt_Handler) wakes up all the threads waiting for keyboard input which are present in s_waitQueue and enqueues the key in s_queue . The wake up function makes all the threads in a given queue runnable and empties the queue. When the next time the thread is run, It detects the key in s_queue and deques s_queue.
 
+
+
+
 Question 5: In GeekOS source files they have given TODO_P(PROJECT_NAME,”Message”) for some of the functions instead of giving actual definition. For example in syscall.c static int Sys_Fork(struct Interrupt_State *state) { TODO_P(PROJECT_FORK, "Fork system call"); return EUNSUPPORTED; } Give detailed implementataion level work flow for fork() system call.
+
 Answer: fork() creates new process copying all data that was present earlier including open files, register state and all memory allocations, which includes the program code to child process. For implementing fork, we create a new Kernel_Thread and copies all the general purpose registers and stack data to the new thread. Then push all data onto stack.
 
+1. Program calls fork() system call
+    Calls the Create_Thread function which will call the init_thread function.
+    int priority is set to the priortiy of the parent
+    bool detached is set to FALSE if the parent process is KERNEL 
+    and is set to TRUE if it is user process.
+    
+2. Kernel fork system call duplicates the process running the program
+    It creates a new instance of the KERNEL_THREAD class 
+    Initializes the member variables using Init_Thread. It will also 
+    set the parent of the child process to CURRENT_THREAD.
+    Also, create a new object for User_Context such that the user space of the 
+    child process is same as that of the parent process.    
+    The content of StackPage of parent is copied to the stack of the 
+    newly created child process. and esp is set accordingly (all the general purpose registers and stack data are copied)
+    Also, link the new User_Context to the Kernel_Thread object.
+    
+3. The kernel sets the return value for the system call for the original program and for the duplicate (PID of the duplicate and 0, respectively)
+    Change the return value in the new stack page.
+    
+4. The kernel puts both processes in the scheduler queue
+    In the fork() function make a call to Add_To_Back_Of_All_Thread_List(...) to add this new process in the list
+    of running processes
 
+5. As each process is scheduled, the kernel 'returns' to each of the two programs.
+    Return and let the current process continue.
