@@ -127,8 +127,8 @@ static void Authentication_Handler(ulong_t arg __attribute__ ((unused))){
             buff[i++] = k;
         }while(true);
 
-        Print("%s", buff);
-        Print("%s", pass);
+        // Print("%s", buff);
+        // Print("%s", pass);
 
         if (!strcmp(pass, buff)){
             // return true; // 
