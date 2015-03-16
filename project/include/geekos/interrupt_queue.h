@@ -1,7 +1,9 @@
 #ifndef Interrupt_h
 #define Interrupt_h
+#include <geekos/kthread.h>
 struct event_details {
-	int event_pid;
+	struct Kernel_Thread * thread;
+	void (*Init_event_details)();
 };
 
 struct event_interrupt {
@@ -21,7 +23,7 @@ struct event_queue {
 	struct node* first;
 	void (*Init_event_queue)(struct event_queue*);
 	void (*pop)(struct event_queue*);
-	int (*getPidFirst)(struct event_queue*);
+	struct Kernel_Thread* (*getThreadFirst)(struct event_queue*);
 	void (*printQueue)(struct event_queue*);
 	void (*insert) (struct event_queue*, struct event_interrupt*);
 };

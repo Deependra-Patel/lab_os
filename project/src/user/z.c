@@ -6,7 +6,7 @@
 // #include <string.h>
 // #include <fcntl.h>
 // #include <errno.h>
-// #include <math.h>
+#include <fileio.h>
 
 #include <conio.h>
 // #include <geekos/malloc.h>
@@ -14,7 +14,12 @@
 // void insert (struct event_queue*, struct event_interrupt*);
 int main(int argc, char **argv) 
 {
-    Print("Hello Wodsfarld !!!\n");
+    char buf[1000];
+	int op = ReadBlock("/c/user/pass.txt", buf, 1024, 1);
+	if(op!=0){
+		Print("Buffer: %s\n", buf);
+	}
+    //Print("Hello Wodsfarld !!!\n");
     // int * a;
     // a = malloc(sizeof(int));
  //   	struct event_queue e_qu;

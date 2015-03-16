@@ -43,6 +43,8 @@ extern struct All_Thread_List s_allThreadList;
 extern void insert(struct event_queue* eq, struct event_interrupt* ei);
 extern void printQueue(struct event_queue* eq);
 extern void Schedule(void);
+extern void Wake_Up_Latest(int tid);
+extern int x;
 /*
  * Allocate a buffer for a user string, and
  * copy it into kernel space.
@@ -157,20 +159,6 @@ static int Sys_PrintString(struct Interrupt_State *state) {
 
         /* Write to console. */
         
-        Remove_Thread(&s_allThreadList, CURRENT_THREAD);
-        //  Print("UUUUUUUUUUUUU");
-        Enqueue_Thread(&s_blockQueue, CURRENT_THREAD);
-        //CURRENT_THREAD = s_runQueue[0];
-        struct event_interrupt ei;
-        struct event_details ed;
-        ed.event_pid = CURRENT_THREAD->pid;
-        ei.event_time = g_numTicks + 100;
-        ei.kind = 0;
-        ei.details = &ed;
-        insert(&interrupt_queue, &ei);
-        //printQueue(&interrupt_queue);
-
-        //Schedule();
         Put_Buf(buf, length);
     }
 
@@ -830,8 +818,27 @@ static int Sys_Format(struct Interrupt_State *state) {
  * Returns: 0 if successful, error code (< 0) if unsuccessful
  */
 static int Sys_ReadBlock(struct Interrupt_State *state) {
-    TODO_P(PROJECT_FS, "ReadBlock system call");
-    return EUNSUPPORTED;
+    //CURRENT_THREAD = s_runQueue[0];
+    struct event_interrupt ei;
+    struct event_details ed;
+    ed.thread = CURRENT_THREAD;
+    ei.event_time = g_numTicks + 100;
+    ei.kind = 0;
+    ei.details = &ed;
+    insert(&interrupt_queue, &ei);
+    printQueue(&interrupt_queue);
+
+    Init_Timer();
+   // timerCallback tc = ;
+    Start_Timer(100, Wake_Up_Latest);
+        // Print("After wait");
+    Print("Pid to block %d", CURRENT_THREAD->pid);
+    x = 10;
+    Wait(&s_blockQueue);
+
+    //TODO_P(PROJECT_FS, "ReadBlock system call");
+    //return EUNSUPPORTED;
+    return 0;
 }
 
 /*

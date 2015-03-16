@@ -36,6 +36,12 @@ extern Spin_Lock_t kthreadLock;
  * List of all threads in the system.
  */
 
+int x = 0;
+
+void Init_event_details(struct event_details* ed, struct Kernel_Thread* kt){
+    ed->thread = kt;
+}
+
 void Init_node(struct node* n){
     //event = new event_interrupt;
     n->event = NULL;
@@ -101,17 +107,17 @@ void pop(struct event_queue* eq) {
 }
 
 
-int getPidFirst(struct event_queue* eq){
+struct Kernel_Thread* getThreadFirst(struct event_queue* eq){
     if (eq->first == NULL){
-        return -1;
+        return 0;
     }
-    else return eq->first->event->details->event_pid;
+    else return eq->first->event->details->thread;
 }
 
 void printQueue(struct event_queue* eq){
     struct node* cur = eq->first;
     while(cur!=NULL){
-        Print("\n Pid: %d, Time: %d \n",cur->event->details->event_pid, cur->event->event_time);
+        Print("\n Pid: %d, Time: %d \n",cur->event->details->thread->pid, cur->event->event_time);
         cur = cur->next;
     }
 }
@@ -164,6 +170,30 @@ static unsigned int s_tlocalKeyCounter = 0;
 static tlocal_destructor_t s_tlocalDestructors[MAX_TLOCAL_KEYS];
 
 static struct Kernel_Thread *Get_Next_Runnable_Locked(void);
+//------------
+void Wake_Up_Latest(int timerId) {
+    struct Kernel_Thread *next;
+
+    KASSERT(!Interrupts_Enabled());
+    //KASSERT(interrupt_queue != NULL); /* try to protect against passing uninitialized pointers in */
+    if(interrupt_queue.first == NULL){
+        Print("Error occured. null first element of interrupt list");
+        return;
+    }
+    Spin_Lock(&kthreadLock);
+
+    next = interrupt_queue.first->event->details->thread;
+    pop(&interrupt_queue);
+
+    if (next != 0) {
+        Remove_Thread(&s_blockQueue, next);
+        Make_Runnable(next);
+        /*Print("Wake_Up_One: waking up %x from %x\n", best, CURRENT_THREAD); */
+    }
+
+    Spin_Unlock(&kthreadLock);
+}
+
 
 /* ----------------------------------------------------------------------
  * Private functions
@@ -765,6 +795,13 @@ struct Kernel_Thread *Get_Next_Runnable(void) {
  * if it is waiting for an event to occur).
  */
 void Schedule(void) {
+    if(x){
+        struct Kernel_Thread* cur = s_runQueue.head;
+        while(cur!=NULL){
+            Print("\n Inside schedule Pid: %d \n",cur->pid);
+            cur = cur->nextThread_Queue;
+        }
+    }
     struct Kernel_Thread *runnable;
 
     /* Make sure interrupts really are disabled */
@@ -776,6 +813,9 @@ void Schedule(void) {
 
     /* Get next thread to run from the run queue */
     runnable = Get_Next_Runnable();
+     if(x){
+        Print("After get next runnable %d", runnable->pid);
+    }   
 
     // Print("switching to %d, %s (core %d)\n", runnable->pid, runnable->userContext? runnable->userContext->name : runnable->threadName, Get_CPU_ID());
 
@@ -932,7 +972,14 @@ void Wait(struct Thread_Queue *waitQueue) {
     Enqueue_Thread(waitQueue, current);
 
     /* Find another thread to run. */
+    Print("before schedule");
+    struct Kernel_Thread* cur = s_runQueue.head;
+    while(cur!=NULL){
+        Print("Pid: %d \n",cur->pid);
+        cur = cur->nextThread_Queue;
+    }
     Schedule();
+    Print("AFter schedule");
 
 }
 
