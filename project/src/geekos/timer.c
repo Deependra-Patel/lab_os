@@ -96,6 +96,7 @@ void Timer_Interrupt_Handler(struct Interrupt_State *state) {
         /* update timer events */
         for (i = 0; i < timeEventCount; i++) {
             if (pendingTimerEvents[i].ticks == 0) {
+                
                 if (timerDebug)
                     Print("timer: event %d expired (%d ticks)\n",
                           pendingTimerEvents[i].id,

@@ -32,9 +32,17 @@
 #include <geekos/sys_net.h>
 #include <geekos/pipe.h>
 #include <geekos/mem.h>
+#include <geekos/interrupt_queue.h>
+
 
 extern Spin_Lock_t kthreadLock;
-
+extern struct Thread_Queue s_runQueue;
+extern struct Thread_Queue s_blockQueue;
+extern struct event_queue interrupt_queue;
+extern struct All_Thread_List s_allThreadList;
+extern void insert(struct event_queue* eq, struct event_interrupt* ei);
+extern void printQueue(struct event_queue* eq);
+extern void Schedule(void);
 /*
  * Allocate a buffer for a user string, and
  * copy it into kernel space.
@@ -128,6 +136,7 @@ static int Sys_PrintString(struct Interrupt_State *state) {
     uint_t length = state->ecx;
     char *buf = 0;
 
+
     Spin_Lock(&sprintLock);
     if (length > 0) {
         /* Copy string into kernel. */
@@ -147,6 +156,21 @@ static int Sys_PrintString(struct Interrupt_State *state) {
         }
 
         /* Write to console. */
+        
+        Remove_Thread(&s_allThreadList, CURRENT_THREAD);
+        //  Print("UUUUUUUUUUUUU");
+        Enqueue_Thread(&s_blockQueue, CURRENT_THREAD);
+        //CURRENT_THREAD = s_runQueue[0];
+        struct event_interrupt ei;
+        struct event_details ed;
+        ed.event_pid = CURRENT_THREAD->pid;
+        ei.event_time = g_numTicks + 100;
+        ei.kind = 0;
+        ei.details = &ed;
+        insert(&interrupt_queue, &ei);
+        //printQueue(&interrupt_queue);
+
+        //Schedule();
         Put_Buf(buf, length);
     }
 

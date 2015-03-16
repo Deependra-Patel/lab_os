@@ -75,7 +75,7 @@ KERNEL_C_SRCS := idt.c int.c trap.c irq.c io.c \
 	$(notdir $(wildcard $(VPATH)/geekos/cfs.c)) \
 	$(addprefix net/, $(notdir $(wildcard $(VPATH)/geekos/net/*.c))) \
 	$(addprefix sound/, $(notdir $(wildcard $(VPATH)/geekos/sound/*.c))) \
-	alarm.c pipe.c \
+	alarm.c pipe.c interrupt_queue.c\
 	main.c 
 # signal above is present in pa2 on
 
