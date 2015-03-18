@@ -38,10 +38,11 @@
 extern Spin_Lock_t kthreadLock;
 extern struct Thread_Queue s_runQueue;
 extern struct Thread_Queue s_blockQueue;
-extern struct event_queue interrupt_queue;
+// extern struct event_queue interrupt_queue;
+extern struct Node_Queue interrupt_queue2;
 extern struct All_Thread_List s_allThreadList;
-extern void insert(struct event_queue* eq, struct event_interrupt* ei);
-extern void printQueue(struct event_queue* eq);
+// extern void insert(struct event_queue* eq, struct event_interrupt* ei);
+// extern void printQueue(struct event_queue* eq);
 extern void Schedule(void);
 extern void Wake_Up_Latest(int tid);
 extern int x;
@@ -817,23 +818,36 @@ static int Sys_Format(struct Interrupt_State *state) {
 
  * Returns: 0 if successful, error code (< 0) if unsuccessful
  */
+
+int ioTime(){
+    if(x)
+        return 10;
+    return 90;
+}
+
 static int Sys_ReadBlock(struct Interrupt_State *state) {
     //CURRENT_THREAD = s_runQueue[0];
-    struct event_interrupt ei;
+    Print("Time on readblock request %d\n", (int)g_numTicks);
+    struct node ei;
+    // struct event_interrupt ei;
     struct event_details ed;
     ed.thread = CURRENT_THREAD;
-    ei.event_time = g_numTicks + 100;
+    ei.event_time = g_numTicks + ioTime();
     ei.kind = 0;
     ei.details = &ed;
-    insert(&interrupt_queue, &ei);
-    printQueue(&interrupt_queue);
-
+    Enqueue_Node(&interrupt_queue2, &ei);
+    
+    struct node* cur = interrupt_queue2.head;
+    Print("Printing interrupt queue:\n");
+    while(cur!=NULL){
+        Print("\nPid: %d should be awaken at time %d\n",cur->details->thread->pid, cur->event_time);
+        cur = cur->nextNode_Queue;
+    }
     Init_Timer();
-   // timerCallback tc = ;
-    Start_Timer(100, Wake_Up_Latest);
-        // Print("After wait");
-    Print("Pid to block %d", CURRENT_THREAD->pid);
-    x = 10;
+    Start_Timer(ioTime(), Wake_Up_Latest);
+
+    Print("Blocking pid: %d, at time: %d\n", CURRENT_THREAD->pid, (int)g_numTicks);
+    x = 1;
     Wait(&s_blockQueue);
 
     //TODO_P(PROJECT_FS, "ReadBlock system call");

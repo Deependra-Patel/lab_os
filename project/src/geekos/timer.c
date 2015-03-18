@@ -62,6 +62,7 @@ unsigned int g_Quantum = DEFAULT_MAX_TICKS;
 #  define Debug(args...)
 #endif
 
+extern int x;
 /* ----------------------------------------------------------------------
  * Private functions
  * ---------------------------------------------------------------------- */
@@ -74,8 +75,11 @@ void Timer_Interrupt_Handler(struct Interrupt_State *state) {
     Begin_IRQ(state);
 
     id = Get_CPU_ID();
-
     if (!id) {
+      // if(x){
+      //   Print("In Timer_Interrupt_Handler, increasing ticks. time:%d\n", (int)g_numTicks);
+      //   x--;
+      // }
         /* Update global number of ticks - only on core 0 so won't count a rate equal to number of cores */
         ++g_numTicks;
     }

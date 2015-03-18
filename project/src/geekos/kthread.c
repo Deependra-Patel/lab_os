@@ -26,6 +26,8 @@
 #include <geekos/projects.h>
 #include <geekos/smp.h>
 #include <geekos/interrupt_queue.h>
+#include <geekos/timer.h>
+
 extern Spin_Lock_t kthreadLock;
 
 /* ----------------------------------------------------------------------
@@ -38,89 +40,89 @@ extern Spin_Lock_t kthreadLock;
 
 int x = 0;
 
-void Init_event_details(struct event_details* ed, struct Kernel_Thread* kt){
-    ed->thread = kt;
-}
+// void Init_event_details(struct event_details* ed, struct Kernel_Thread* kt){
+//     ed->thread = kt;
+// }
 
-void Init_node(struct node* n){
-    //event = new event_interrupt;
-    n->event = NULL;
-    n->next = NULL;
-    n->prev = NULL;
-}
+// void Init_node(struct node* n){
+//     //event = new event_interrupt;
+//     n->event = NULL;
+//     n->next = NULL;
+//     n->prev = NULL;
+// }
 
-void Init_event_queue(struct event_queue* eq) {
-    eq->first = NULL;
-}
+// void Init_event_queue(struct event_queue* eq) {
+//     eq->first = NULL;
+// }
 
-void insert (struct event_queue* eq, struct event_interrupt* eve) {
-    bool found = false;
-    struct node* temp = eq->first;
-    if (temp == NULL) {
-        found = true;
-        struct node a_node;
-        temp = &a_node;//malloc(sizeof(struct node));
-        Init_node(temp);
-        temp->event = eve;
-        eq->first = temp;
-    }
-    else {
-        while(temp != NULL) {
-            if (temp->event->event_time > eve->event_time) {
-                break;
-            }
-            temp = temp->next;
-        }
-        if (!found) {
-            if (temp->prev != NULL) {
-                struct node a_node;
-                temp->prev->next = &a_node;//malloc(sizeof(struct node));
-                Init_node(temp->prev->next);
-                temp->prev->next->event = eve;
-                temp->prev->next->prev = temp->prev;
-                temp->prev->next->next = temp;
-                temp->prev = temp->prev->next;
-            }
-            else {
-                struct node a_node;
-                temp->prev = &a_node;//malloc(sizeof(struct node));
-                Init_node(temp->prev);
-                temp->prev->next = temp;
-                temp->prev->event = eve;
-                if (temp == eq->first) {
-                    eq->first = eq->first->prev;
-                }
-            }
-        }
-    }
-}
-
-
-void pop(struct event_queue* eq) {
-    if (eq->first != NULL) {
-        eq->first = eq->first->next;
-        //if (eq->first != NULL) delete(eq->first->prev);
-    }
-    else {
-        eq->first = NULL;
-    }
-}
+// void insert (struct event_queue* eq, struct event_interrupt* eve) {
+//     bool found = false;
+//     struct node* temp = eq->first;
+//     if (temp == NULL) {
+//         found = true;
+//         struct node a_node;
+//         temp = &a_node;//malloc(sizeof(struct node));
+//         Init_node(temp);
+//         temp->event = eve;
+//         eq->first = temp;
+//     }
+//     else {
+//         while(temp != NULL) {
+//             if (temp->event->event_time > eve->event_time) {
+//                 break;
+//             }
+//             temp = temp->next;
+//         }
+//         if (!found) {
+//             if (temp->prev != NULL) {
+//                 struct node a_node;
+//                 temp->prev->next = &a_node;//malloc(sizeof(struct node));
+//                 Init_node(temp->prev->next);
+//                 temp->prev->next->event = eve;
+//                 temp->prev->next->prev = temp->prev;
+//                 temp->prev->next->next = temp;
+//                 temp->prev = temp->prev->next;
+//             }
+//             else {
+//                 struct node a_node;
+//                 temp->prev = &a_node;//malloc(sizeof(struct node));
+//                 Init_node(temp->prev);
+//                 temp->prev->next = temp;
+//                 temp->prev->event = eve;
+//                 if (temp == eq->first) {
+//                     eq->first = eq->first->prev;
+//                 }
+//             }
+//         }
+//     }
+// }
 
 
-struct Kernel_Thread* getThreadFirst(struct event_queue* eq){
-    if (eq->first == NULL){
-        return 0;
-    }
-    else return eq->first->event->details->thread;
-}
+// void pop(struct event_queue* eq) {
+//     if (eq->first != NULL) {
+//         eq->first = eq->first->next;
+//         //if (eq->first != NULL) delete(eq->first->prev);
+//     }
+//     else {
+//         eq->first = NULL;
+//     }
+// }
 
-void printQueue(struct event_queue* eq){
-    struct node* cur = eq->first;
-    while(cur!=NULL){
-        Print("\n Pid: %d, Time: %d \n",cur->event->details->thread->pid, cur->event->event_time);
-        cur = cur->next;
-    }
-}
+
+// struct Kernel_Thread* getThreadFirst(struct event_queue* eq){
+//     if (eq->first == NULL){
+//         return 0;
+//     }
+//     else return eq->first->event->details->thread;
+// }
+
+// void printQueue(struct event_queue* eq){
+//     struct node* cur = eq->first;
+//     while(cur!=NULL){
+//         Print("\n Pid: %d, Time: %d \n",cur->event->details->thread->pid, cur->event->event_time);
+//         cur = cur->next;
+//     }
+// }
 
 
 struct All_Thread_List s_allThreadList;
@@ -132,7 +134,8 @@ struct Thread_Queue s_blockQueue;
 
 /*interrupt queue
 */
-struct event_queue interrupt_queue;
+//struct event_queue interrupt_queue;
+struct Node_Queue interrupt_queue2;
 
 /*
  * Current thread.
@@ -172,26 +175,94 @@ static tlocal_destructor_t s_tlocalDestructors[MAX_TLOCAL_KEYS];
 static struct Kernel_Thread *Get_Next_Runnable_Locked(void);
 //------------
 void Wake_Up_Latest(int timerId) {
+    int ret = Cancel_Timer(timerId);
+    if (ret == -1)
+        Print("Timer not Cancelled.\n");
+    else Print("Timer successfully Cancelled. Current Time: %d", (int)g_numTicks);
+
+    struct node* cur = interrupt_queue2.head;
+    Print("\nPrinting interrupt queue before removing:\n");
+    while(cur!=NULL){
+        Print("\nPid: %d should be awaken at time %d\n",cur->details->thread->pid, cur->event_time);
+        cur = cur->nextNode_Queue;
+    }
+    cur = interrupt_queue2.head;
+    struct node* min = cur;
+    while(cur!=NULL){
+        if(cur->event_time < min->event_time){
+            min = cur;
+        }
+        cur = cur->nextNode_Queue;
+    }
+    Remove_Node(&interrupt_queue2, min);
+
+    cur = interrupt_queue2.head;
+    Print("\nPrinting interrupt queue after Removing:\n");
+    while(cur!=NULL){
+        Print("\n Pid: %d should be awaken at time %d\n",cur->details->thread->pid, cur->event_time);
+        cur = cur->nextNode_Queue;
+    }    
+
+
+    Spin_Lock(&kthreadLock);
+
+    struct Kernel_Thread* next = s_blockQueue.head;
+    while(next!=0){
+        if(next->pid == min->details->thread->pid){
+            break;
+        }
+        next = next->nextThread_Queue;
+    }
+
+    Print("Trying to remove thread from s_blockQueue and making blocked runnable.\n");
+    if (next != 0) {
+        Print("Wake_Up_Latest: waking up %d\n", next->pid);
+
+        Remove_Thread(&s_blockQueue, next);
+        Make_Runnable(next);
+    }
+    Spin_Unlock(&kthreadLock);
+
+    //Schedule();
+    /*
+    int ret = Cancel_Timer(timerId);
+    Print("Printing intt queue\n");
+    printQueue(&interrupt_queue);
+
+    if (ret == -1)
+        Print("Timer not Cancelled.\n");
+    else Print("Timer successfully Cancelled. Current Time: %d", (int)g_numTicks);
     struct Kernel_Thread *next;
 
-    KASSERT(!Interrupts_Enabled());
+    KASSERT(!Interrupts_Enabled());*/
     //KASSERT(interrupt_queue != NULL); /* try to protect against passing uninitialized pointers in */
-    if(interrupt_queue.first == NULL){
+    /*if(interrupt_queue.first == NULL){
         Print("Error occured. null first element of interrupt list");
         return;
     }
+
     Spin_Lock(&kthreadLock);
 
     next = interrupt_queue.first->event->details->thread;
     pop(&interrupt_queue);
 
+    Print("After popping intt\n");
+    struct Kernel_Thread* cur = s_runQueue.head;
+    while(cur!=0){
+        Print("\n Inside schedule Pid: %d \n",cur->pid);
+        cur = cur->nextThread_Queue;
+    }
+    Print("AFter printing\n");
     if (next != 0) {
+        Print("Wake_Up_Latest: waking up %d\n", next->pid);
+
         Remove_Thread(&s_blockQueue, next);
         Make_Runnable(next);
-        /*Print("Wake_Up_One: waking up %x from %x\n", best, CURRENT_THREAD); */
     }
 
     Spin_Unlock(&kthreadLock);
+    x = 1;
+    Schedule();*/
 }
 
 
@@ -636,7 +707,7 @@ static void Tlocal_Exit(struct Kernel_Thread *curr) {
  * ---------------------------------------------------------------------- */
 
 void Init_Scheduler(unsigned int cpuID, void *stack) {
-    Init_event_queue(&interrupt_queue);
+    //Init_event_queue(&interrupt_queue);
 
 
     struct Kernel_Thread *mainThread = (struct Kernel_Thread *)Alloc_Page();
@@ -733,6 +804,7 @@ void Make_Runnable(struct Kernel_Thread *kthread) {
     KASSERT(!Interrupts_Enabled());
 
     Enqueue_Thread(&s_runQueue, kthread);
+
     TODO_P(PROJECT_SCHEDULING, "replace make runnable as needed");
 }
 
@@ -798,7 +870,7 @@ void Schedule(void) {
     if(x){
         struct Kernel_Thread* cur = s_runQueue.head;
         while(cur!=NULL){
-            Print("\n Inside schedule Pid: %d \n",cur->pid);
+            //Print("\n Inside schedule Pid: %d \n",cur->pid);
             cur = cur->nextThread_Queue;
         }
     }
@@ -814,7 +886,7 @@ void Schedule(void) {
     /* Get next thread to run from the run queue */
     runnable = Get_Next_Runnable();
      if(x){
-        Print("After get next runnable %d", runnable->pid);
+       //Print("After get next runnable %d", runnable->pid);
     }   
 
     // Print("switching to %d, %s (core %d)\n", runnable->pid, runnable->userContext? runnable->userContext->name : runnable->threadName, Get_CPU_ID());
@@ -963,6 +1035,12 @@ struct Kernel_Thread *Lookup_Thread(int pid, int notOwner) {
  */
 
 void Wait(struct Thread_Queue *waitQueue) {
+    //struct node* cur = interrupt_queue2.head;
+    // while(cur!=NULL){
+    //     Print("\n Blocking Pid: %d \n",cur->details->thread->pid);
+    //     cur = cur->nextNode_Queue;
+    // }
+
     struct Kernel_Thread *current = CURRENT_THREAD;
 
     KASSERT(!Interrupts_Enabled());
@@ -972,14 +1050,14 @@ void Wait(struct Thread_Queue *waitQueue) {
     Enqueue_Thread(waitQueue, current);
 
     /* Find another thread to run. */
-    Print("before schedule");
+    /*Print("before schedule");
     struct Kernel_Thread* cur = s_runQueue.head;
     while(cur!=NULL){
         Print("Pid: %d \n",cur->pid);
         cur = cur->nextThread_Queue;
-    }
+    }*/
     Schedule();
-    Print("AFter schedule");
+    //Print("AFter schedule");
 
 }
 
