@@ -109,7 +109,7 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
     /* rest of your handling code here */
     TODO_P(PROJECT_VIRTUAL_MEMORY_B, "handle page faults");
 
-    TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
+    //TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
 
 
   error:
@@ -136,18 +136,63 @@ void Idenity_Map_Page(pde_t * currentPageDir, unsigned int address, int flags) {
  * Initialize virtual memory by building page tables
  * for the kernel and physical memory.
  */
+pde_t *g_kernel_pde = {0};
+
 void Init_VM(struct Boot_Info *bootInfo) {
-    /*
-     * Hints:
-     * - Build kernel page directory and page tables
-     * - Call Enable_Paging() with the kernel page directory
-     * - Install an interrupt handler for interrupt 14,
-     *   page fault
-     * - Do not map a page at address 0; this will help trap
-     *   null pointer references
-     */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_A,
-           "Build initial kernel page directory and page tables");
+    int  kernel_pde_entries;
+    int  whole_pages;
+    int  i,j;
+    uint_t mem_addr;
+    pte_t * cur_pte;
+    whole_pages=bootInfo->memSizeKB/4;
+    Print("whole pages are %d\n",whole_pages);
+    kernel_pde_entries=whole_pages/NUM_PAGE_DIR_ENTRIES+(whole_pages%NUM_PAGE_DIR_ENTRIES==0 ? 0:1);
+    Print("kdep %d\n",kernel_pde_entries);
+    Print("the kernel_pde_entries is %d\n",kernel_pde_entries);
+    //KASSERT(0);
+
+    g_kernel_pde=(pde_t *)Alloc_Page();
+    Print("KERNALADD: %d\n", (int)g_kernel_pde);
+
+    memset(g_kernel_pde,'\0',PAGE_SIZE);
+
+    pde_t * cur_pde_entry;
+    cur_pde_entry=g_kernel_pde;
+    mem_addr=0;
+    for(i=0;i<kernel_pde_entries;i++){
+        cur_pde_entry->present=1;
+        cur_pde_entry->flags=VM_WRITE | VM_USER;
+       // cur_pde_entry->kernelInfo = KINFO_PAGE_ON_DISK;
+        // cur_pde_entry->accessed = 0;
+        // cur_pde_entry->reserved = 0;
+        // cur_pde_entry->globalPage=0;
+        Print("I: %d\n", i);
+
+        cur_pte=(pte_t *)Alloc_Page();
+        KASSERT(cur_pte!=NULL);
+
+        memset(cur_pte,'\0',PAGE_SIZE);
+        cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
+        mem_addr = i*NUM_PAGE_TABLE_ENTRIES*PAGE_SIZE;
+        int last_pagetable_num;
+        last_pagetable_num=whole_pages%NUM_PAGE_TABLE_ENTRIES;
+        if(last_pagetable_num==0 || i!=(kernel_pde_entries-1)){
+          last_pagetable_num=NUM_PAGE_TABLE_ENTRIES;
+        }
+
+        for(j=0;j<last_pagetable_num;j++){
+            cur_pte->present=1;
+            cur_pte->flags=VM_WRITE|VM_USER;
+            // cur_pte->globalPage=0;  
+            cur_pte->pageBaseAddr=mem_addr>>12;
+            //cur_pte->kernelInfo = KINFO_PAGE_ON_DISK;
+            cur_pte++;
+            mem_addr+=PAGE_SIZE;
+        }
+        cur_pde_entry++;
+    }
+    Enable_Paging(g_kernel_pde);
+    Install_Interrupt_Handler(14,Page_Fault_Handler);
 }
 
 void Init_Secondary_VM() {
