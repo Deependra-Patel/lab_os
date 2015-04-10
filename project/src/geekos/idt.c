@@ -29,7 +29,7 @@ static union IDT_Descriptor s_IDT[4][NUM_IDT_ENTRIES];
  */
 extern char g_entryPointTableStart, g_entryPointTableEnd;
 extern int g_handlerSizeNoErr, g_handlerSizeErr;
-
+extern int myDebug;
 /*
  * Table of C interrupt handler functions.
  * Note that this is public only because it is used
@@ -114,6 +114,13 @@ void Init_Interrupt_Gate(union IDT_Descriptor *desc, ulong_t addr, int dpl) {
  * This function can install a handler for ANY interrupt.
  */
 void Install_Interrupt_Handler(int interrupt, Interrupt_Handler handler) {
-    KASSERT(interrupt >= 0 && interrupt < NUM_IDT_ENTRIES);
+    KASSERT(interrupt >= 0 && interrupt < NUM_IDT_ENTRIES); 
+    /*if(interrupt == 14 && myDebug){
+        Print("Dogeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        KASSERT(0);
+    }*/
     g_interruptTable[interrupt] = handler;
+    Print("INS INT\n");
+
 }
+

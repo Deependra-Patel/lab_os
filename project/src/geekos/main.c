@@ -81,7 +81,7 @@ static void Spawn_Init_Process(void);
  */
 
 extern void checkPaging(void);
-
+extern int myDebug;
 
 void Hardware_Shutdown() {
 

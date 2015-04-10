@@ -59,7 +59,7 @@ const pde_t *Kernel_Page_Dir(void) {
 }
 
 
-
+int myDebug = 0;
 /*
  * Print diagnostic information for a page fault.
  */
@@ -82,6 +82,74 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
     else
         Print("in Supervisor Mode\n");
 }
+//---------------------------------------------------------
+int Alloc_User_Page(pde_t * pageDir,uint_t startAddress,uint_t sizeInMemory)
+{
+ uint_t pagedir_index=startAddress>>22;
+ uint_t page_index=(startAddress<<10)>>22;
+ 
+ pde_t * pagedir_entry=pageDir+pagedir_index;
+ pte_t * page_entry;
+
+
+ if(pagedir_entry->present)
+ {
+  page_entry=(pte_t *)(pagedir_entry->pageTableBaseAddr<<12); 
+ }
+ else
+ {
+  page_entry=(pte_t*) Alloc_Page();
+  if(page_entry==NULL) 
+  {
+   Print("can not allocate page in Alloc_User_Page/n");
+   return -1;
+  }
+  memset(page_entry,0,PAGE_SIZE);
+  *((uint_t*)pagedir_entry)=0;
+  pagedir_entry->present=1;
+  pagedir_entry->flags=VM_WRITE | VM_READ | VM_USER;
+  pagedir_entry->globalPage=0;
+  pagedir_entry->pageTableBaseAddr=(ulong_t)page_entry >> 12;
+ }
+
+ page_entry+=page_index;
+ 
+ int num_pages;
+ void * page_addr;
+ num_pages=Round_Up_To_Page(startAddress-Round_Down_To_Page(startAddress)+sizeInMemory)/PAGE_SIZE;
+
+ //Print("startAddress is %x,num_pages is %d/n",startAddress,num_pages);
+
+
+ int i;
+ uint_t first_page_addr=0;
+ for(i=0;i<num_pages;i++)
+ {
+  if(!page_entry->present)
+  {
+   page_addr=Alloc_Pageable_Page(page_entry, Round_Down_To_Page(startAddress));
+   if(page_addr==NULL) 
+   {
+    Print("can not allocate page in Alloc_User_Page/n");
+    return -1;
+   }
+   *((uint_t*)page_entry)=0;
+   page_entry->present=1;
+   page_entry->flags=VM_WRITE | VM_READ | VM_USER;
+   page_entry->globalPage = 0;
+   page_entry->pageBaseAddr = (ulong_t)page_addr>>12;
+   KASSERT(page_addr!= 0);
+   if(i==0)
+   {
+    first_page_addr = (uint_t) page_addr;
+   } 
+  }
+  page_entry++;
+  startAddress+=PAGE_SIZE; 
+ }
+ return 0;
+}
+//---------------------------------------------------------
 
 
 /*
@@ -89,7 +157,9 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
  * You should call the Install_Interrupt_Handler() function to
  * register this function as the handler for interrupt 14.
  */
-/*static*/ void Page_Fault_Handler(struct Interrupt_State *state) {
+static void Page_Fault_Handler(struct Interrupt_State *state) {
+    //KASSERT(0);
+    //Print("In PF handler\n");
     ulong_t address;
     faultcode_t faultCode;
 
@@ -111,8 +181,66 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
 
     //TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
 
+//---------------------------------------------------------------
+struct User_Context* userContext = CURRENT_THREAD->userContext;
 
+ if(faultCode.writeFault)
+ { 
+  //Print("write Fault/n");
+  int res;
+  res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
+  if(res==-1)
+  {
+   //Print("Alloc_User_Page error in Page_Fault_Handler/n");
+   Exit(-1);
+  }
+  return ;
+ }
+ else
+ {
+  ulong_t page_dir_addr= PAGE_DIRECTORY_INDEX(address);
+  ulong_t page_addr= PAGE_TABLE_INDEX(address);
+  pde_t * page_dir_entry=(pde_t*)userContext->pageDir+page_dir_addr;
+  pte_t * page_entry= NULL;
+  if(page_dir_entry->present)
+  {
+   page_entry=(pte_t*)((page_dir_entry->pageTableBaseAddr) << 12);
+   page_entry+=page_addr;
+  }
+  else
+  {
+   Print_Fault_Info(address,faultCode);
+   Exit(-1);
+  }
+
+  if(page_entry->kernelInfo!=KINFO_PAGE_ON_DISK)
+  {
+   Print_Fault_Info(address,faultCode);
+   Exit(-1);
+  }
+  int pagefile_index = page_entry->pageBaseAddr;
+  void * paddr=Alloc_Pageable_Page(page_entry,Round_Down_To_Page(address));
+  if(paddr==NULL)
+  {
+   Print("no more page/n");
+   Exit(-1);
+  }
+
+  *((uint_t*)page_entry)=0;
+  page_entry->present=1;
+  page_entry->flags=VM_WRITE | VM_READ | VM_USER;
+  page_entry->globalPage = 0;
+  page_entry->pageBaseAddr = (ulong_t)paddr>>12;
+  Enable_Interrupts();
+  Read_From_Paging_File(paddr,Round_Down_To_Page(address), pagefile_index);//,page_entry);
+  Disable_Interrupts();
+  Free_Space_On_Paging_File(pagefile_index);
+  return ;
+ }
+//---------------------------------------------------------------
   error:
+    Print("Page fault @%lx\n", address);
+    Print("KASSSSSSSSSSSSSSSSSSSSSSSS\n");
     Print("Unexpected Page Fault received\n");
     Print_Fault_Info(address, faultCode);
     Dump_Interrupt_State(state);
@@ -136,6 +264,7 @@ void Idenity_Map_Page(pde_t * currentPageDir, unsigned int address, int flags) {
  * Initialize virtual memory by building page tables
  * for the kernel and physical memory.
  */
+ extern Interrupt_Handler* g_interruptTable;
 pde_t *g_kernel_pde = {0};
 
 void Init_VM(struct Boot_Info *bootInfo) {
@@ -144,6 +273,7 @@ void Init_VM(struct Boot_Info *bootInfo) {
     int  i,j;
     uint_t mem_addr;
     pte_t * cur_pte;
+
     whole_pages=bootInfo->memSizeKB/4;
     Print("whole pages are %d\n",whole_pages);
     kernel_pde_entries=whole_pages/NUM_PAGE_DIR_ENTRIES+(whole_pages%NUM_PAGE_DIR_ENTRIES==0 ? 0:1);
@@ -191,8 +321,17 @@ void Init_VM(struct Boot_Info *bootInfo) {
         }
         cur_pde_entry++;
     }
+
     Enable_Paging(g_kernel_pde);
+    Print("%d", (int)*g_interruptTable);
+    //KASSERT(0);    
+    Print("dddddddddddddddddddddddddddd");
+    myDebug = 1;
     Install_Interrupt_Handler(14,Page_Fault_Handler);
+        if(myDebug){
+        Print("heeeeeeeeeeeeeeeee");
+        KASSERT(0);
+    }
 }
 
 void Init_Secondary_VM() {
