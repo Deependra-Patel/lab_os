@@ -46,12 +46,10 @@ void *Operate(void *threadid)
   pthread_mutex_unlock(&finishedMute[t]); 
    
   while(true){
-    // cout<<t<<endl;
     // if(cur == NULL){
     //   usleep(10);
       if(done[t]){
         pthread_exit((void*) 0);
-        cout << "sfgfgfg\n";
       }
       // blocked[t] = false;
       //pthread_cond_wait(&passed, &mutePass);
@@ -158,15 +156,15 @@ int main(int argc, char *argv[])
   rep(i, NUM_THREADS) blocked[i] = true;
 
    while(true){
-
     string temp;
     cin>>temp;
     if(temp == "END"){
-      cout<<"All queries processed.";
+      cout<<"All queries processed.\n";
       // done = true; 
       break;
     }
     int flight;
+
     // cout << temp;
     // debug(temp);
     cin >> flight;
@@ -209,14 +207,20 @@ int main(int argc, char *argv[])
       }
 
     }
+  //cout<<"heeeeeee";
 
   }
-  // debug("gere");
+  //debug("gere");
   while(true){
     // pthread_join(threads[i], &status);
     bool x = true;
     for (int j = 0; j < NUM_THREADS; j++){
-      if (blocked[j]) done[j] = true;
+      if (blocked[j]) {
+        pthread_mutex_lock(&finishedMute[j]);
+        pthread_cond_signal(&finished[j]);
+        pthread_mutex_unlock(&finishedMute[j]);        
+        done[j] = true;
+      }
       else x = false;
     }
     if (x) break;
@@ -224,7 +228,10 @@ int main(int argc, char *argv[])
     sleep(1);
   }
    // s Last thing that main() should do 
-  // debug("gere");
+  //debug("gere");
+
+  //exit(0);
+  pthread_exit(NULL);
   
   pthread_mutex_destroy(&mute);
   pthread_mutex_destroy(&mutePass);
