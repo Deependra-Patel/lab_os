@@ -216,10 +216,10 @@ int main(int argc, char *argv[])
     bool x = true;
     for (int j = 0; j < NUM_THREADS; j++){
       if (blocked[j]) {
+        done[j] = true;        
         pthread_mutex_lock(&finishedMute[j]);
         pthread_cond_signal(&finished[j]);
         pthread_mutex_unlock(&finishedMute[j]);        
-        done[j] = true;
       }
       else x = false;
     }
