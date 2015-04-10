@@ -8,8 +8,8 @@
 using namespace std;
 
 #define NUM_THREADS 5
-#define MAX_SEATS 10
-#define RAND_MAX 10
+#define MAX_SEATS	10
+
 
 #define DBG 1
 #define debug(x) if (DBG) {cerr << "\n" << #x << " : " << x << endl;}
@@ -21,7 +21,6 @@ struct op{
   string type;
   int flight;
 };
-
 bool done[NUM_THREADS] = {false};
 int count[10] = {0};//count
 pthread_mutex_t mute;
@@ -71,43 +70,33 @@ void *Operate(void *threadid)
 
     if(myCur.type == "BOOK"){
       pthread_mutex_lock(&mute);
-      cout << "Query : BOOK " << myCur.flight << endl; 
-
       if(count[myCur.flight] < MAX_SEATS){
         cout << "SEAT BOOKED ON FLIGHT "  << myCur.flight << endl;
         count[myCur.flight]++;
       }
-      else cout << "NO SEAT LEFT ON FLIGHT "  << myCur.flight << endl;
-      
+      else cout<<"Sorry no seat left.";
       pthread_mutex_unlock(&mute);
 
     }
     else if(myCur.type == "CANCEL"){
       pthread_mutex_lock(&mute);
-      cout << "Query : CANCEL " << myCur.flight << endl; 
-      if (count[myCur.flight] > 0){
+      cout<<"SEAT CANCELLED ON FLIGHT " << myCur.flight <<endl;
+      if (count[myCur.flight] > 0)
         count[myCur.flight]--;
-        cout<<"SEAT CANCELLED ON FLIGHT " << myCur.flight <<endl;
-      }
-      else{
-        cout << "NOTHING TO CANCEL ON FLIGHT " << myCur.flight << endl;
-      }
       pthread_mutex_unlock(&mute);
 
     }
     else if(myCur.type == "STATUS"){
       pthread_mutex_lock(&mute);
-      cout << "Query : STATUS " << myCur.flight << endl; 
       cout<< MAX_SEATS - count[myCur.flight] << " seats left on flight " << myCur.flight << endl;
       pthread_mutex_unlock(&mute);
 
     }
     else {
-      cout<<"INVALID COMMAND"<<endl;
+      cout<<"errrrrr"<<endl;
     }
-    cout << endl;
-    double waitTime = rand() % 20;
-    sleep(waitTime/RAND_MAX);
+
+    sleep(1);
     blocked[t] = true;
     // debug2(t, blocked[t]);
     pthread_mutex_lock(&mutePass);
@@ -130,8 +119,6 @@ void *Operate(void *threadid)
 
 int main(int argc, char *argv[])
 {
-
-  srand (time(NULL));
   void* status;
   pthread_mutex_init(&mute, NULL);
   pthread_mutex_init(&mutePass, NULL);
