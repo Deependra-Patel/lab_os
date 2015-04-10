@@ -4,23 +4,28 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unistd.h>
 using namespace std;
 
-#define NUM_THREADS	5
+#define NUM_THREADS 5
+#define MAX_SEATS	10
 
 struct op{
   string type;
   int flight;
 };
-
-int count[10];//count
+bool done = false;
+int count[10] = {0};//count
 pthread_mutex_t mute;
 pthread_mutex_t mutePass;
+pthread_mutex_t finishedMute[NUM_THREADS];
+
 
 pthread_cond_t passed;
+pthread_cond_t finished[NUM_THREADS];
 
 pthread_t threads[NUM_THREADS];
-bool blocked[NUM_THREADS];
+bool blocked[NUM_THREADS] = {true};
 op *cur;
 
 vector<op*> operations;
@@ -28,35 +33,67 @@ vector<op*> operations;
 void *Operate(void *threadid)
 {
   long t = (long)threadid;
+  pthread_mutex_lock(&finishedMute[t]);
+  pthread_cond_wait(&finished[t], &finishedMute[t]);
+  pthread_mutex_unlock(&finishedMute[t]); 
+   
   while(true){
+    // cout<<t<<endl;
+    // if(cur == NULL){
+    //   usleep(10);
+      if(done){
+        pthread_exit((void*) 0);
+      }
+      //blocked[t] = true;
+      //pthread_cond_wait(&passed, &mutePass);
+     // continue;
+    //}
+    // cout<<"upppppppp";
     pthread_mutex_lock(&mutePass);
     op myCur = *cur;
+    // cout<<"cur"<<myCur.flight<<endl;
     pthread_cond_signal(&passed);
-    pthread_mutex_lock(&mutePass);
+    pthread_mutex_unlock(&mutePass);
 
-    cout<<"Inside of thread: "<<t<<endl;
-    cout<<"For flight: "<<myCur.flight<<","<<endl;
+    // cout<<"Inside of thread: "<<t<<endl;
+    // cout<<"For flight: "<<myCur.flight<<","<<endl;
 
     if(myCur.type == "BOOK"){
-      if(count[myCur.flight]>0)
-        count[myCur.flight]--;
+      pthread_mutex_lock(&mute);
+      if(count[myCur.flight] < MAX_SEATS){
+        cout<<"Seat booked"<<endl;
+        count[myCur.flight]++;
+      }
       else cout<<"Sorry no seat left.";
+      pthread_mutex_unlock(&mute);
+
     }
     else if(myCur.type == "CANCEL"){
-      count[myCur.flight]++;
+        cout<<"Seat CANCELLED"<<endl;
+      pthread_mutex_lock(&mute);
+      if (count[myCur.flight] > 0)
+        count[myCur.flight]--;  
+      pthread_mutex_unlock(&mute);
+
     }
     else if(myCur.type == "STATUS"){
-      cout<<count[myCur.flight]<<" seats left.";
+      pthread_mutex_lock(&mute);
+
+      cout<<MAX_SEATS - count[myCur.flight]<<" seats left.";
+      pthread_mutex_unlock(&mute);
+
     }
     else {
       cout<<"errrrrr"<<endl;
     }
+    
     blocked[t] = true;
-    // pthread_block() 
+    pthread_mutex_lock(&finishedMute[t]);
+    pthread_cond_wait(&finished[t], &finishedMute[t]);
+    pthread_mutex_unlock(&finishedMute[t]);
   }
 
-   //printf("Hello World! It's me, thread #%ld!\n", tid);
-  pthread_exit(NULL);
+   //printf("Hello World! It's me, thread #%ld!\n", tid)
 }
 
 int main(int argc, char *argv[])
@@ -66,7 +103,10 @@ int main(int argc, char *argv[])
   pthread_mutex_init(&mutePass, NULL);
 
   pthread_cond_init(&passed, NULL);
- 
+  for (int i = 0; i < NUM_THREADS ; i++){
+    pthread_mutex_init(&finishedMute[i], NULL);
+    pthread_cond_init(&finished[i], NULL);
+  }
 
   for(int i =0 ; i<10; i++){
     count[i] = 1;
@@ -81,25 +121,35 @@ int main(int argc, char *argv[])
       exit(-1);
     }
   }
-/*
+
    while(true){
     string temp;
     cin>>temp;
     if(temp == "END"){
       cout<<"All queries processed.";
+      done = true; 
       break;
     }
     int flight;
+    cout << temp;
     cin >> flight;
     op *my = new op();
     my->flight = flight;
     my->type = temp;
-
+    cur = my;
+    // cout<<"hee"<<endl;
     for(int j=0; j<NUM_THREADS; j++){
       if(blocked[j]){
+        // cout << "passed dsd";
+        pthread_mutex_lock(&finishedMute[j]);
+        pthread_cond_signal(&finished[j]);
+        pthread_mutex_unlock(&finishedMute[j]);
+
         pthread_mutex_lock(&mutePass);
         pthread_cond_wait(&passed, &mutePass);
         pthread_mutex_unlock(&mutePass);
+        // cout << "passed";
+        cout << endl;
         break;
       }
     }
@@ -109,9 +159,9 @@ int main(int argc, char *argv[])
     pthread_join(threads[i], &status);
   }    
    // s Last thing that main() should do 
-  */
+  
   pthread_mutex_destroy(&mute);
   pthread_mutex_destroy(&mutePass);
-  pthread_cond_destroy(&passed );
+  pthread_cond_destroy(&passed);
   pthread_exit(NULL);
 }
