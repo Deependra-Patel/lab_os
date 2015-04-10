@@ -106,17 +106,18 @@ void *Operate(void *threadid)
     cout << endl;
     double waitTime = rand() % 20;
     sleep(waitTime/RAND_MAX);
-    blocked[t] = true;
     // debug2(t, blocked[t]);
-    pthread_mutex_lock(&mutePass);
-    // blocked[t] = false;   
+    // pthread_mutex_lock(&mutePass);
+    // // blocked[t] = false;   
 
-    // op myCur = *cur;
-    // cout<<"cur"<<myCur.flight<<endl;
-    pthread_cond_signal(&passed);
-    pthread_mutex_unlock(&mutePass);
+    // // op myCur = *cur;
+    // // cout<<"cur"<<myCur.flight<<endl;
+    // pthread_cond_signal(&passed);
+    // pthread_mutex_unlock(&mutePass);
 
     pthread_mutex_lock(&finishedMute[t]);
+        blocked[t] = true;
+
     pthread_cond_wait(&finished[t], &finishedMute[t]);
     pthread_mutex_unlock(&finishedMute[t]);
 
@@ -159,7 +160,6 @@ int main(int argc, char *argv[])
     string temp;
     cin>>temp;
     if(temp == "END"){
-      cout<<"All queries processed.\n";
       // done = true; 
       break;
     }
@@ -186,13 +186,17 @@ int main(int argc, char *argv[])
         if (breakable) break;
         sleep(1);
       }
+        pthread_mutex_lock(&finishedMute[j]);
+        bool temp = blocked[j];
+        pthread_mutex_unlock(&finishedMute[j]);
 
-      if(blocked[j]){
+      if(temp){
         // debug(j);
-        blocked[j] = false;
         // cout << "passed dsd";
         // debug("dffdf");
         pthread_mutex_lock(&finishedMute[j]);
+                blocked[j] = false;
+
         pthread_cond_signal(&finished[j]);
         pthread_mutex_unlock(&finishedMute[j]);
 
@@ -211,6 +215,7 @@ int main(int argc, char *argv[])
 
   }
   //debug("gere");
+  cout<<"All queries processed.\n";
   while(true){
     // pthread_join(threads[i], &status);
     bool x = true;
@@ -227,6 +232,7 @@ int main(int argc, char *argv[])
     // debug(x);
     sleep(1);
   }
+  cout<<"Done\n";
    // s Last thing that main() should do 
   //debug("gere");
 
