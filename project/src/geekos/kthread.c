@@ -874,6 +874,7 @@ void Schedule(void) {
             cur = cur->nextThread_Queue;
         }
     }
+
     struct Kernel_Thread *runnable;
 
     /* Make sure interrupts really are disabled */
@@ -969,7 +970,12 @@ int Join(struct Kernel_Thread *kthread) {
 
     /* Wait for it to die */
     while (kthread->alive) {
+        // KASSERT(0);
+        Print("in while\n");
+        
         Wait(&kthread->joinQueue);
+        // Print("in while\n");
+        KASSERT(0);
     }
 
     /* Get thread exit code. */
@@ -1056,7 +1062,9 @@ void Wait(struct Thread_Queue *waitQueue) {
         Print("Pid: %d \n",cur->pid);
         cur = cur->nextThread_Queue;
     }*/
+        // KASSERT(0); 
     Schedule();
+    // KASSERT(0);
     //Print("AFter schedule");
 
 }

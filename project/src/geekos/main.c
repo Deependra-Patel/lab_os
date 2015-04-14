@@ -113,6 +113,7 @@ void Main(struct Boot_Info *bootInfo) {
     //        "initialize virtual memory page tables.");
     Init_VM(bootInfo);
     Init_Scheduler(0, (void *)KERN_STACK);
+    
     Init_Traps();
     Init_Local_APIC(0);
     Init_Timer();
@@ -143,6 +144,7 @@ void Main(struct Boot_Info *bootInfo) {
     /* End sound init */
 
     Mount_Root_Filesystem();
+    Init_Paging();
 
     TODO_P(PROJECT_VIRTUAL_MEMORY_A, "initialize page file.");
 
@@ -183,11 +185,14 @@ static void Spawn_Init_Process(void) {
     Print("Spawning init process (%s)\n", INIT_PROGRAM);
     rc = Spawn_Foreground(INIT_PROGRAM, INIT_PROGRAM, &initProcess);
 
+    // Print("rc:: %d", rc);
     if (rc != 0) {
         Print("Failed to spawn init process: error code = %d\n", rc);
     } else {
         /* Wait for it to exit */
         int exitCode = Join(initProcess);
+        KASSERT(0);
+        
         Print("Init process exited with code %d\n", exitCode);
     }
 }

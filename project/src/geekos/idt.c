@@ -114,7 +114,7 @@ void Init_Interrupt_Gate(union IDT_Descriptor *desc, ulong_t addr, int dpl) {
  * This function can install a handler for ANY interrupt.
  */
 void Install_Interrupt_Handler(int interrupt, Interrupt_Handler handler) {
-    KASSERT(interrupt >= 0 && interrupt < NUM_IDT_ENTRIES); 
+    //KASSERT(interrupt >= 0 && interrupt < NUM_IDT_ENTRIES); 
     /*if(interrupt == 14 && myDebug){
         Print("Dogeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
         KASSERT(0);

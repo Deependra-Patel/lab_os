@@ -32,6 +32,9 @@
 #include <geekos/errno.h>
 #include <geekos/projects.h>
 #include <geekos/smp.h>
+#include <geekos/bitset.h>
+#include <geekos/vfs.h>
+
 
 #include <libc/mmap.h>
 
@@ -48,7 +51,11 @@
 /*
  * flag to indicate if debugging paging code
  */
-int debugFaults = 0;
+int debugFaults = 1;
+int numOfPagingPages = 0; //in the disk pagingfile.bin
+void* BitmapPaging = 0; 
+struct Paging_Device* pagingDevice;
+
 #define Debug(args...) if (debugFaults) Print(args)
 
 
@@ -66,7 +73,7 @@ int myDebug = 0;
 static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
     extern uint_t g_freePageCount;
 
-    Print("Pid %d: ", CURRENT_THREAD->pid);
+    // Print("Pid %d: ", CURRENT_THREAD->pid);
     Print("\n Page Fault received, at address %p (%d pages free)\n",
           (void *)address, g_freePageCount);
     if (faultCode.protectionViolation)
@@ -158,8 +165,8 @@ int Alloc_User_Page(pde_t * pageDir,uint_t startAddress,uint_t sizeInMemory)
  * register this function as the handler for interrupt 14.
  */
 static void Page_Fault_Handler(struct Interrupt_State *state) {
-    //KASSERT(0);
-    //Print("In PF handler\n");
+    KASSERT(0);
+    Print("In PF handler\n");
     ulong_t address;
     faultcode_t faultCode;
 
@@ -167,17 +174,19 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
 
     /* Get the address that caused the page fault */
     address = Get_Page_Fault_Address();
-    Debug("Page fault @%lx\n", address);
+
+    //Debug("Page fault @%lx\n", address);
 
     if (address < 0xfec01000 && address > 0xf0000000) {
         KASSERT0(0, "page fault address in APIC/IOAPIC range\n");
     }
-
+    Print("In PF22 handler \n");
     /* Get the fault code */
     faultCode = *((faultcode_t *) & (state->errorCode));
-
+    Print_Fault_Info(address, faultCode);
+    Print("herere");
     /* rest of your handling code here */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B, "handle page faults");
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "handle page faults");
 
     //TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
 
@@ -309,7 +318,12 @@ void Init_VM(struct Boot_Info *bootInfo) {
         if(last_pagetable_num==0 || i!=(kernel_pde_entries-1)){
           last_pagetable_num=NUM_PAGE_TABLE_ENTRIES;
         }
-
+        // int temp = 0;
+        // if (i == 0){
+        //     temp = 1;
+        //     cur_pte++;
+        //     mem_addr+=PAGE_SIZE;
+        // }
         for(j=0;j<last_pagetable_num;j++){
             cur_pte->present=1;
             cur_pte->flags=VM_WRITE|VM_USER;
@@ -321,6 +335,31 @@ void Init_VM(struct Boot_Info *bootInfo) {
         }
         cur_pde_entry++;
     }
+    //APIC HOLE
+    cur_pde_entry = g_kernel_pde + 1019;
+    cur_pde_entry->present=1;
+    cur_pde_entry->flags=VM_WRITE | VM_USER;
+    cur_pte=(pte_t *)Alloc_Page();
+
+    KASSERT(cur_pte!=NULL);
+
+    mem_addr = 1019*NUM_PAGE_TABLE_ENTRIES*(long long)(PAGE_SIZE);
+    memset(cur_pte,'\0',PAGE_SIZE);
+    cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
+
+    for(j = 0;j < PAGE_SIZE;j++){
+        cur_pte->present=1;
+        cur_pte->flags=VM_WRITE|VM_USER;
+        cur_pte->pageBaseAddr=mem_addr>>12;
+        cur_pte++;
+        mem_addr+=PAGE_SIZE;
+    }
+
+
+    //int *a = 4096;
+    Print("CUr thread%d\n", (int)CURRENT_THREAD);
+
+    Print("Converted: %d\n", ((int)(((pte_t*)(g_kernel_pde->pageTableBaseAddr<<12)+1)->pageBaseAddr<<12))+1);
 
     Enable_Paging(g_kernel_pde);
     Print("%d", (int)*g_interruptTable);
@@ -330,7 +369,7 @@ void Init_VM(struct Boot_Info *bootInfo) {
     Install_Interrupt_Handler(14,Page_Fault_Handler);
         if(myDebug){
         Print("heeeeeeeeeeeeeeeee");
-        KASSERT(0);
+        // KASSERT(0);
     }
 }
 
@@ -344,8 +383,19 @@ void Init_Secondary_VM() {
  * is called, to ensure that the paging file is available.
  */
 void Init_Paging(void) {
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B,
-           "Initialize paging file data structures");
+    pagingDevice = Get_Paging_Device();
+    if(pagingDevice==NULL){
+        Print("can not find pagefile/n");
+        KASSERT(0);
+        return;
+    }
+    numOfPagingPages = pagingDevice->numSectors/SECTORS_PER_PAGE;
+    BitmapPaging = Create_Bit_Set(numOfPagingPages);
+
+    Print("%d",(int)numOfPagingPages);
+    //KASSERT(0);
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_B,
+      //     "Initialize paging file data structures");
 }
 
 /**
@@ -355,9 +405,10 @@ void Init_Paging(void) {
  *   the paging file, or -1 if the paging file is full
  */
 int Find_Space_On_Paging_File(void) {
-    KASSERT(!Interrupts_Enabled());
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Find free page in paging file");
-    return EUNSUPPORTED;
+    KASSERT(!Interrupts_Enabled()); 
+    return Find_First_Free_Bit(BitmapPaging, numOfPagingPages);     
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Find free page in paging file");
+    //return EUNSUPPORTED;
 }
 
 /**
@@ -367,7 +418,9 @@ int Find_Space_On_Paging_File(void) {
  */
 void Free_Space_On_Paging_File(int pagefileIndex) {
     KASSERT(!Interrupts_Enabled());
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Free page in paging file");
+     KASSERT(0 <= pagefileIndex && pagefileIndex < numOfPagingPages);
+     Clear_Bit(BitmapPaging, pagefileIndex);    
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Free page in paging file");
 }
 
 /**
@@ -380,8 +433,24 @@ void Free_Space_On_Paging_File(int pagefileIndex) {
  */
 void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
     struct Page *page = Get_Page((ulong_t) paddr);
-    KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Write page data to paging file");
+    KASSERT(!(page->flags & PAGE_PAGEABLE)); /* Page must be locked! */
+    KASSERT((page->flags & PAGE_LOCKED));
+ //Debug("PageFileIndex: 0 <= %d < %d/n", pagefileIndex, bitmapSize);
+    if(0<=pagefileIndex && pagefileIndex<numOfPagingPages){
+        int i;
+        for(i=0;i<SECTORS_PER_PAGE;i++){
+            Block_Write(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
+        }
+        Set_Bit(BitmapPaging, pagefileIndex); 
+    }
+    else {
+        Print("In func Write_To_Paging_File: pagefileIndex out of range!");
+        KASSERT(0);
+        Exit(-1);
+    }  
+    //struct Page *page = Get_Page((ulong_t) paddr);
+    //KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
+    // TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Write page data to paging file");
 }
 
 /**
@@ -396,7 +465,20 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
 void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
     struct Page *page = Get_Page((ulong_t) paddr);
     KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Read page data from paging file");
+
+    if(0<=pagefileIndex && pagefileIndex<numOfPagingPages){
+        int i;
+        for(i=0;i<SECTORS_PER_PAGE;i++){
+            Block_Read(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
+        }
+    }
+    else {
+        Print("In func Write_To_Paging_File: pagefileIndex out of range!");
+        KASSERT(0);
+        Exit(-1);
+    }     
+
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Read page data from paging file");
 }
 
 

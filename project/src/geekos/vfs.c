@@ -263,7 +263,7 @@ bool Register_Filesystem(const char *fsName, struct Filesystem_Ops * fsOps) {
     Mutex_Lock(&s_vfsLock);
     Add_To_Back_Of_Filesystem_List(&s_filesystemList, fs);
     Mutex_Unlock(&s_vfsLock);
-
+    
     return true;
 }
 

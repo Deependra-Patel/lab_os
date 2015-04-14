@@ -48,6 +48,7 @@ int userDebug = 0;
  * and other resources allocated within it.
  */
 void Destroy_User_Context(struct User_Context *context) {
+    KASSERT(0);
     /*
      * Hints:
      * - Free all pages, page tables, and page directory for
@@ -56,6 +57,20 @@ void Destroy_User_Context(struct User_Context *context) {
      * - Free semaphores, files, and other resources used
      *   by the process
      */
+    KASSERT(userContext->refCount == 0);
+
+    /* Free the context's LDT descriptor */
+    Free_Segment_Descriptor(userContext->ldtDescriptor);
+
+    /* Free the context's memory */
+    bool iflag;
+    iflag = Begin_Int_Atomic();
+    //--destroy page table, page dir
+    //--free all pages, also in swap space
+    Free(userContext->memory);
+    Free(userContext);
+    End_Int_Atomic(iflag);
+
     TODO_P(PROJECT_VIRTUAL_MEMORY_A,
            "Destroy User_Context data structure after process exits");
 }
@@ -81,6 +96,7 @@ void Destroy_User_Context(struct User_Context *context) {
 int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
                       struct Exe_Format *exeFormat, const char *command,
                       struct User_Context **pUserContext) {
+    KASSERT(0); 
     /*
      * Hints:
      * - This will be similar to the same function in userseg.c
@@ -91,6 +107,64 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
      * - Fill in initial stack pointer, argument block address,
      *   and code entry point fields in User_Context
      */
+
+    int i;
+    ulong_t maxva = 0;
+    unsigned numArgs;
+    ulong_t argBlockSize;
+    ulong_t size, argBlockAddr;
+    struct User_Context *userContext = 0;
+
+    /* Find maximum virtual address */
+    for (i = 0; i < exeFormat->numSegments; ++i) {//block use here
+        struct Exe_Segment *segment = &exeFormat->segmentList[i];
+        ulong_t topva = segment->startAddress + segment->sizeInMemory;  /* FIXME: range check */
+
+        if (topva > maxva)
+            maxva = topva;
+    }
+
+    /* Determine size required for argument block */
+    Get_Argument_Block_Size(command, &numArgs, &argBlockSize);
+
+    /*
+     * Now we can determine the size of the memory block needed
+     * to run the process.
+     */
+    size = Round_Up_To_Page(maxva) + DEFAULT_USER_STACK_SIZE;
+    argBlockAddr = size;
+    size += argBlockSize;
+
+    /* Create User_Context */
+    userContext = Create_User_Context(size);
+    if (userContext == 0)
+        return -1;
+
+    /* Load segment data into memory */
+    for (i = 0; i < exeFormat->numSegments; ++i) {
+        struct Exe_Segment *segment = &exeFormat->segmentList[i];
+
+        memcpy(userContext->memory + segment->startAddress,
+               exeFileData + segment->offsetInFile, segment->lengthInFile);
+    }
+
+    /* Format argument block */
+    Format_Argument_Block(userContext->memory + argBlockAddr, numArgs,
+                          argBlockAddr, command);
+
+    /* Fill in code entry point */
+    userContext->entryAddr = exeFormat->entryAddr;
+
+    /*
+     * Fill in addresses of argument block and stack
+     * (They happen to be the same)
+     */
+    userContext->argBlockAddr = argBlockAddr;
+    userContext->stackPointerAddr = argBlockAddr;
+
+
+    *pUserContext = userContext;
+    return 0;
     TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Load user program into address space");
     return 0;
 }
@@ -100,6 +174,8 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
  * Returns true if successful, false otherwise.
  */
 bool Copy_From_User(void *destInKernel, ulong_t srcInUser, ulong_t numBytes) {
+    KASSERT(0);
+
     /*
      * Hints:
      * - Make sure that user page is part of a valid region
@@ -126,6 +202,8 @@ bool Copy_From_User(void *destInKernel, ulong_t srcInUser, ulong_t numBytes) {
  * Returns true if successful, false otherwise.
  */
 bool Copy_To_User(ulong_t destInUser, void *srcInKernel, ulong_t numBytes) {
+    KASSERT(0);
+
     /*
      * Hints:
      * - Same as for Copy_From_User()
@@ -140,6 +218,8 @@ bool Copy_To_User(ulong_t destInUser, void *srcInKernel, ulong_t numBytes) {
  * Returns true if successful, false otherwise.
  */
 bool Copy_User_To_User(void *destInUser, ulong_t srcInUser, ulong_t numBytes) {
+    KASSERT(0);
+
     /*
      * Hints:
      * - Make sure that each user page is part of a valid region
@@ -165,6 +245,8 @@ bool Copy_User_To_User(void *destInUser, ulong_t srcInUser, ulong_t numBytes) {
  * Switch to user address space.
  */
 void Switch_To_Address_Space(struct User_Context *userContext) {
+    KASSERT(0);
+
     /*
      * - If you are still using an LDT to define your user code and data
      *   segments, switch to the process's LDT
