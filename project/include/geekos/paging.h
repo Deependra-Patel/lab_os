@@ -133,6 +133,8 @@ void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex);
 bool Is_Mmaped_Page(struct User_Context *context, ulong_t vaddr);
 void Write_Out_Mmaped_Page(struct User_Context *context, ulong_t vaddr);
 
+int Alloc_User_Page(pde_t * pageDir,uint_t startAddress,uint_t sizeInMemory);
+
 extern const pde_t *Kernel_Page_Dir(void);
 
 #endif

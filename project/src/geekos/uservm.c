@@ -25,9 +25,18 @@
 #include <geekos/vfs.h>
 #include <geekos/user.h>
 #include <geekos/projects.h>
-
+#include <geekos/ktypes.h>
+#include <geekos/kassert.h>
+#include <geekos/segment.h>
+#include <geekos/gdt.h>
+#include <geekos/paging.h>
 
 extern Spin_Lock_t kthreadLock;
+extern pde_t *g_kernel_pde;
+uint_t user_vm_start = 1<<31;
+#define USER_VM_START user_vm_start
+#define USER_VM_LEN user_vm_start
+#define DEFAULT_STACK_SIZE user_vm_start/2
 
 int userDebug = 0;
 #define Debug(args...) if (userDebug) Print("uservm: " args)
@@ -47,7 +56,30 @@ int userDebug = 0;
  * Destroy a User_Context object, including all memory
  * and other resources allocated within it.
  */
-void Destroy_User_Context(struct User_Context *context) {
+
+struct User_Context * Create_User_Context(){
+    struct User_Context * user_context;
+    user_context=(struct User_Context *)Malloc(sizeof(struct User_Context));
+    if(user_context==NULL){
+        Print("malloc User_Context fail in Create_User_Context/n");
+        return NULL;
+    }
+    user_context->ldtDescriptor=NULL;
+    user_context->memory=NULL;
+    user_context->size=0;
+    user_context->ldtSelector=0;
+    user_context->csSelector=0;
+    user_context->dsSelector=0;
+
+    user_context->pageDir=NULL;
+    user_context->entryAddr=0;
+    user_context->argBlockAddr=0;
+    user_context->stackPointerAddr=0;
+    user_context->refCount=0;
+    return user_context;
+}
+
+void Destroy_User_Context(struct User_Context *userContext) {
     KASSERT(0);
     /*
      * Hints:
@@ -75,6 +107,106 @@ void Destroy_User_Context(struct User_Context *context) {
            "Destroy User_Context data structure after process exits");
 }
 
+uint_t lin_to_phyaddr(pde_t * page_dir, uint_t lin_address)
+{
+    uint_t pagedir_index=lin_address>>22;
+    uint_t page_index=(lin_address<<10)>>22;
+    uint_t offset_address=lin_address & 0xfff;
+
+
+    pde_t * pagedir_entry=page_dir+pagedir_index;
+    pte_t * page_entry=0;
+
+    if(pagedir_entry->present){
+        page_entry=(pte_t*) ((uint_t)pagedir_entry->pageTableBaseAddr << 12);
+        page_entry+=page_index;
+        //-----------------mydebug----------------------
+        if(page_entry->present==0){
+            Print("PGIND: %d\n", page_index);
+            Print("the page is not present! /n");
+            KASSERT(0);
+        }
+        //----------------------------------------------
+        return (page_entry->pageBaseAddr << 12)+offset_address;
+    }
+    else {
+        Print("Trying to resolve non-existent address%u/n", lin_address);
+        return 0;
+    }
+}
+
+bool mydebug = false;
+
+bool Copy_User_Page(pde_t * page_dir, uint_t dest_user, char * src, uint_t byte_num){
+            Print("dest_user, %u, byte_num %d\n",dest_user, byte_num);     
+    uint_t phy_start;
+    uint_t temp_len;
+    int page_nums;
+    struct Page * page;
+
+    if(Round_Down_To_Page(dest_user+byte_num) == Round_Down_To_Page(dest_user)) {
+        temp_len=byte_num;
+        page_nums=1;
+    }
+    else {
+        temp_len=Round_Up_To_Page(dest_user)-dest_user;
+        byte_num-=temp_len;
+        page_nums=0;
+    }
+
+    //if (mydebug)  KASSERT(0);
+    phy_start=lin_to_phyaddr(page_dir, dest_user);
+    if(phy_start==0) {
+        return false;
+    }
+    page = Get_Page(phy_start);
+    Disable_Interrupts();
+    page->flags &= ~ PAGE_PAGEABLE;
+    Enable_Interrupts();
+    memcpy((char *)phy_start, src, temp_len);
+    page->flags |= PAGE_PAGEABLE;
+
+    if(page_nums == 1) {
+        return true;
+    }
+
+    temp_len=Round_Up_To_Page(dest_user)-dest_user;
+    dest_user+=temp_len;
+    src+=temp_len;
+    byte_num-=temp_len;
+
+    while(dest_user!=Round_Down_To_Page(dest_user + byte_num)) {
+        phy_start=lin_to_phyaddr(page_dir, dest_user);
+        if(phy_start == 0) {
+            return false;
+        }
+        page = Get_Page(phy_start);
+        Disable_Interrupts();
+        page->flags &= ~ PAGE_PAGEABLE;
+        Enable_Interrupts();
+
+        memcpy((char*)phy_start, src, PAGE_SIZE);
+        page->flags |= PAGE_PAGEABLE;
+
+        dest_user+=PAGE_SIZE;
+        byte_num-=PAGE_SIZE;
+        src+=PAGE_SIZE;
+    }
+
+    phy_start = lin_to_phyaddr(page_dir, dest_user);
+    if(phy_start==0) {
+        return false;
+    }
+    Disable_Interrupts();
+    page->flags &= ~ PAGE_PAGEABLE;
+    Enable_Interrupts();
+
+    memcpy((char*)phy_start, src, byte_num);
+    page->flags |= PAGE_PAGEABLE;
+    return true;
+}
+
+
 /*
  * Load a user executable into memory by creating a User_Context
  * data structure.
@@ -96,7 +228,6 @@ void Destroy_User_Context(struct User_Context *context) {
 int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
                       struct Exe_Format *exeFormat, const char *command,
                       struct User_Context **pUserContext) {
-    KASSERT(0); 
     /*
      * Hints:
      * - This will be similar to the same function in userseg.c
@@ -107,65 +238,120 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
      * - Fill in initial stack pointer, argument block address,
      *   and code entry point fields in User_Context
      */
+    // int f = 0;
+    // while(command[f]!='\0'){
+    //     Print("%c", command[f]);
+    //     f++;
+    // }
+    // Print("Len: %d", (int)exeFileLength);
+    // KASSERT(0);
+    struct User_Context *uContext;
+    uContext=Create_User_Context();
+
+    uContext->ldtDescriptor=Allocate_Segment_Descriptor();
+    if(uContext->ldtDescriptor==NULL){
+        Print("allocate segment descriptor fail/n"); 
+        return -1;
+    }
+
+    Init_LDT_Descriptor(uContext->ldtDescriptor, uContext->ldt, NUM_USER_LDT_ENTRIES);
+    uContext->ldtSelector=Selector(USER_PRIVILEGE, true, Get_Descriptor_Index(uContext->ldtDescriptor));
+
+    Init_Code_Segment_Descriptor(&uContext->ldt[0], USER_VM_START, USER_VM_LEN/PAGE_SIZE, USER_PRIVILEGE);
+    Init_Data_Segment_Descriptor(&uContext->ldt[1], USER_VM_START, USER_VM_LEN/PAGE_SIZE, USER_PRIVILEGE);
+
+    uContext->csSelector=Selector(USER_PRIVILEGE, false,0);
+    uContext->dsSelector=Selector(USER_PRIVILEGE, false,1);
+
+    //mydebug
+    //Print("next will handle page data in Load_User_Program!/n");
+    pde_t * pageDirectory;
+    pageDirectory=(pde_t *)Alloc_Page();
+    if(pageDirectory==NULL){
+    //mydebug
+        Print("no more page!/n");
+        return -1;
+    }
+    memset(pageDirectory,'\0', PAGE_SIZE);
+    memcpy(pageDirectory, g_kernel_pde, PAGE_SIZE);
+    memset(pageDirectory+512,'\0', PAGE_SIZE/2);
+
+    uContext->pageDir=pageDirectory;
 
     int i;
-    ulong_t maxva = 0;
-    unsigned numArgs;
-    ulong_t argBlockSize;
-    ulong_t size, argBlockAddr;
-    struct User_Context *userContext = 0;
+    int res;
+    uint_t startAddress=0;
+    uint_t sizeInMemory=0;
+    uint_t offsetInFile=0;
+    uint_t lengthInFile=0;
+    Print("numSeg: %d\n", exeFormat->numSegments);
+    for(i=0; i<exeFormat->numSegments; i++){
+        if (i == 2) mydebug = true;
+        startAddress = exeFormat->segmentList[i].startAddress;
+        sizeInMemory = exeFormat->segmentList[i].sizeInMemory;
 
-    /* Find maximum virtual address */
-    for (i = 0; i < exeFormat->numSegments; ++i) {//block use here
-        struct Exe_Segment *segment = &exeFormat->segmentList[i];
-        ulong_t topva = segment->startAddress + segment->sizeInMemory;  /* FIXME: range check */
-
-        if (topva > maxva)
-            maxva = topva;
+        offsetInFile = exeFormat->segmentList[i].offsetInFile;
+        lengthInFile = exeFormat->segmentList[i].lengthInFile;
+        //if ((sizeInMemory == 0) && (lengthInFile == 0)) continue;
+        if(startAddress + sizeInMemory < USER_VM_LEN){
+            Print("%d\n", startAddress+USER_VM_START);
+            res=Alloc_User_Page(pageDirectory, startAddress+USER_VM_START, sizeInMemory);
+            if(res!=0){
+                return -1;
+            }
+            Print("sizeinmem, %d leninfile: %d\n", sizeInMemory, lengthInFile);
+            res=Copy_User_Page(pageDirectory, startAddress+USER_VM_START, exeFileData+offsetInFile, lengthInFile);
+            if(res!=true){
+                return -1;
+            }
+        } 
+        else{
+            Print("startAddress+sizeInMemory > 2GB in Load_User_Program/n");
+            return -1;
+        }
     }
-
-    /* Determine size required for argument block */
-    Get_Argument_Block_Size(command, &numArgs, &argBlockSize);
-
-    /*
-     * Now we can determine the size of the memory block needed
-     * to run the process.
-     */
-    size = Round_Up_To_Page(maxva) + DEFAULT_USER_STACK_SIZE;
-    argBlockAddr = size;
-    size += argBlockSize;
-
-    /* Create User_Context */
-    userContext = Create_User_Context(size);
-    if (userContext == 0)
+    //KASSERT(0);
+    //mydebug
+    //Print("next will handle block an stack in Load_User_Program!/n");
+    uint_t args_num;
+    uint_t stack_addr;
+    uint_t arg_addr;
+    ulong_t arg_size;
+    Get_Argument_Block_Size(command, &args_num, &arg_size);
+    if(arg_size > PAGE_SIZE){
+        Print("Argument Block too big for one PAGE_SIZE/n");
         return -1;
+    }
+    arg_addr=Round_Down_To_Page(USER_VM_LEN-arg_size);
+    char* block_buffer=Malloc(arg_size);
+    KASSERT(block_buffer!=NULL);
+    Format_Argument_Block(block_buffer, args_num, arg_addr, command);
 
-    /* Load segment data into memory */
-    for (i = 0; i < exeFormat->numSegments; ++i) {
-        struct Exe_Segment *segment = &exeFormat->segmentList[i];
-
-        memcpy(userContext->memory + segment->startAddress,
-               exeFileData + segment->offsetInFile, segment->lengthInFile);
+    res=Alloc_User_Page(pageDirectory, arg_addr+USER_VM_START, arg_size);
+    if(res!=0){
+        return -1;
+    }
+    res=Copy_User_Page(pageDirectory, arg_addr+USER_VM_START, block_buffer, arg_size);
+    if(res!=true){
+        return -1;
     }
 
-    /* Format argument block */
-    Format_Argument_Block(userContext->memory + argBlockAddr, numArgs,
-                          argBlockAddr, command);
+    Free(block_buffer);
 
-    /* Fill in code entry point */
-    userContext->entryAddr = exeFormat->entryAddr;
+    stack_addr=USER_VM_LEN-Round_Up_To_Page(arg_size)-DEFAULT_STACK_SIZE;
+    res=Alloc_User_Page(pageDirectory, stack_addr+USER_VM_START, DEFAULT_STACK_SIZE);
+    if(res!=0){
+        return -1;
+    }
 
-    /*
-     * Fill in addresses of argument block and stack
-     * (They happen to be the same)
-     */
-    userContext->argBlockAddr = argBlockAddr;
-    userContext->stackPointerAddr = argBlockAddr;
-
-
-    *pUserContext = userContext;
-    return 0;
-    TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Load user program into address space");
+    uContext->entryAddr = exeFormat->entryAddr;
+    //Print("Setting entry address to %lu/n", (*pUserContext)->entryAddr);
+    uContext->argBlockAddr = arg_addr;
+    uContext->size = USER_VM_LEN;
+    uContext->stackPointerAddr = arg_addr;
+    *pUserContext=uContext;
+    //mydebug
+    //Print("Load_User_Program will return!/n");
     return 0;
 }
 

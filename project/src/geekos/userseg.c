@@ -178,6 +178,12 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength
                       __attribute__ ((unused)), struct Exe_Format *exeFormat,
                       const char *command,
                       struct User_Context **pUserContext) {
+    // int f = 0;
+    // while(exeFileData[f]!='\0'){
+    //     Print("%c", exeFileData[f]);
+    //     f++;
+    // }
+    // KASSERT(0);
     int i;
     ulong_t maxva = 0;
     unsigned numArgs;
