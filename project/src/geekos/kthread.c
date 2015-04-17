@@ -899,6 +899,7 @@ void Schedule(void) {
      * it was called from.
      */
     Switch_To_Thread(runnable);
+
 }
 
 /*
@@ -962,7 +963,6 @@ int Join(struct Kernel_Thread *kthread) {
     int exitCode;
 
     KASSERT(Interrupts_Enabled());
-
     /* It is only legal for the owner to join */
     KASSERT(kthread->owner == CURRENT_THREAD);
 

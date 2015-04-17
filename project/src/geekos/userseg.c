@@ -185,6 +185,22 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength
     // }
     // KASSERT(0);
     int i;
+
+    // uint_t startAddress=0;
+    // uint_t sizeInMemory=0;
+    // uint_t offsetInFile=0;
+    // uint_t lengthInFile=0;
+    // Print("numSeg: %d\n", exeFormat->numSegments);
+    // for(i=0; i<exeFormat->numSegments; i++){
+    //     startAddress = exeFormat->segmentList[i].startAddress;
+    //     sizeInMemory = exeFormat->segmentList[i].sizeInMemory;
+
+    //     offsetInFile = exeFormat->segmentList[i].offsetInFile;
+    //     lengthInFile = exeFormat->segmentList[i].lengthInFile;
+    //     Print("i: %d, startadd: %u, sizeinmem, %u leninfile: %d\n", i, startAddress, sizeInMemory, lengthInFile);
+    // }
+    // KASSERT(0);
+
     ulong_t maxva = 0;
     unsigned numArgs;
     ulong_t argBlockSize;

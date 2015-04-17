@@ -36,7 +36,7 @@ extern pde_t *g_kernel_pde;
 uint_t user_vm_start = 1<<31;
 #define USER_VM_START user_vm_start
 #define USER_VM_LEN user_vm_start
-#define DEFAULT_STACK_SIZE user_vm_start/2
+#define DEFAULT_STACK_SIZE PAGE_SIZE
 
 int userDebug = 0;
 #define Debug(args...) if (userDebug) Print("uservm: " args)
@@ -113,7 +113,7 @@ uint_t lin_to_phyaddr(pde_t * page_dir, uint_t lin_address)
     uint_t page_index=(lin_address<<10)>>22;
     uint_t offset_address=lin_address & 0xfff;
 
-
+    Print("pgdir: %d\n",pagedir_index);
     pde_t * pagedir_entry=page_dir+pagedir_index;
     pte_t * page_entry=0;
 
@@ -155,6 +155,7 @@ bool Copy_User_Page(pde_t * page_dir, uint_t dest_user, char * src, uint_t byte_
     }
 
     //if (mydebug)  KASSERT(0);
+
     phy_start=lin_to_phyaddr(page_dir, dest_user);
     if(phy_start==0) {
         return false;
@@ -277,7 +278,8 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     memset(pageDirectory+512,'\0', PAGE_SIZE/2);
 
     uContext->pageDir=pageDirectory;
-
+    Print("pdir: %u\n", (uint_t)pageDirectory);
+    // KASSERT(0);
     int i;
     int res;
     uint_t startAddress=0;
@@ -292,14 +294,15 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
 
         offsetInFile = exeFormat->segmentList[i].offsetInFile;
         lengthInFile = exeFormat->segmentList[i].lengthInFile;
-        //if ((sizeInMemory == 0) && (lengthInFile == 0)) continue;
+        if ((sizeInMemory == 0) && (lengthInFile == 0)) continue;
+
         if(startAddress + sizeInMemory < USER_VM_LEN){
             Print("%d\n", startAddress+USER_VM_START);
             res=Alloc_User_Page(pageDirectory, startAddress+USER_VM_START, sizeInMemory);
             if(res!=0){
                 return -1;
             }
-            Print("sizeinmem, %d leninfile: %d\n", sizeInMemory, lengthInFile);
+            Print("sizeinmem, %u leninfile: %d\n", sizeInMemory, lengthInFile);
             res=Copy_User_Page(pageDirectory, startAddress+USER_VM_START, exeFileData+offsetInFile, lengthInFile);
             if(res!=true){
                 return -1;
@@ -310,9 +313,11 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
             return -1;
         }
     }
+
     //KASSERT(0);
     //mydebug
     //Print("next will handle block an stack in Load_User_Program!/n");
+    Print("Converted: %d\n", ((int)(((pte_t*)(pageDirectory[512].pageTableBaseAddr<<12))->pageBaseAddr<<12)));
     uint_t args_num;
     uint_t stack_addr;
     uint_t arg_addr;
@@ -331,6 +336,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     if(res!=0){
         return -1;
     }
+
     res=Copy_User_Page(pageDirectory, arg_addr+USER_VM_START, block_buffer, arg_size);
     if(res!=true){
         return -1;
@@ -339,7 +345,9 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     Free(block_buffer);
 
     stack_addr=USER_VM_LEN-Round_Up_To_Page(arg_size)-DEFAULT_STACK_SIZE;
+
     res=Alloc_User_Page(pageDirectory, stack_addr+USER_VM_START, DEFAULT_STACK_SIZE);
+
     if(res!=0){
         return -1;
     }
@@ -430,14 +438,23 @@ bool Copy_User_To_User(void *destInUser, ulong_t srcInUser, ulong_t numBytes) {
 /*
  * Switch to user address space.
  */
+extern int Load_LDTR(ushort_t);
 void Switch_To_Address_Space(struct User_Context *userContext) {
-    KASSERT(0);
+    // KASSERT(0);
 
     /*
      * - If you are still using an LDT to define your user code and data
      *   segments, switch to the process's LDT
      * - 
      */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_A,
-           "Switch_To_Address_Space() using paging");
+    if(userContext == 0){
+        Print("the userContext is NULL!/n");
+        return;
+    }
+Set_PDBR(userContext->pageDir);
+        KASSERT(0);
+
+    Load_LDTR(userContext->ldtSelector);
+    // TODO_P(PROJECT_VIRTUAL_MEMORY_A,
+    //        "Switch_To_Address_Space() using paging");
 }

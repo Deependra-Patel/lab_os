@@ -91,6 +91,7 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
 }
 //---------------------------------------------------------
 int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
+    Print("pagedir %d, startadd: %u, sizeInMemory: %d \n", (int)pageDir, startAddress, sizeInMemory);
     uint_t pagedir_index=startAddress>>22;
     uint_t page_index=(startAddress<<10)>>22;
 
@@ -121,7 +122,7 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
     void * page_addr;
     num_pages=Round_Up_To_Page(startAddress-Round_Down_To_Page(startAddress)+sizeInMemory)/PAGE_SIZE;
 
-    //Print("startAddress is %x,num_pages is %d/n",startAddress,num_pages);
+    Print("startAddress is %x,num_pages is %d/n",startAddress,num_pages);
 
 
     int i;
@@ -417,6 +418,8 @@ void Free_Space_On_Paging_File(int pagefileIndex) {
  *   in the paging file
  */
 void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
+
+    KASSERT(0);
     struct Page *page = Get_Page((ulong_t) paddr);
     KASSERT(!(page->flags & PAGE_PAGEABLE)); /* Page must be locked! */
     KASSERT((page->flags & PAGE_LOCKED));
@@ -448,6 +451,8 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
  *   in the paging file
  */
 void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
+        KASSERT(0);
+
     struct Page *page = Get_Page((ulong_t) paddr);
     KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
 

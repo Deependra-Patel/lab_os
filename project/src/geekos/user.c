@@ -133,7 +133,6 @@ int Spawn(const char *program, const char *command,
         *pThread = process;
     } else
         rc = ENOMEM;
-
     return rc;
 
   fail:
@@ -169,7 +168,8 @@ void Switch_To_User_Context(struct Kernel_Thread *kthread,
     int cpuID;
     extern int userDebug;
     struct User_Context *userContext = kthread->userContext;
-
+    Print("pdir: %u\n", (uint_t)userContext->pageDir);
+    KASSERT(0);
     /*
      * FIXME: could avoid resetting ss0/esp0 if not returning
      * to user space.

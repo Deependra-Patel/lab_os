@@ -184,7 +184,6 @@ static void Spawn_Init_Process(void) {
     /* Load and run a.exe, the "init" process */
     Print("Spawning init process (%s)\n", INIT_PROGRAM);
     rc = Spawn_Foreground(INIT_PROGRAM, INIT_PROGRAM, &initProcess);
-
     // Print("rc:: %d", rc);
     if (rc != 0) {
         Print("Failed to spawn init process: error code = %d\n", rc);

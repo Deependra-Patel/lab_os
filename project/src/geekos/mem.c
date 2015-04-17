@@ -306,6 +306,7 @@ static void *Alloc_Or_Reclaim_Page(pte_t * entry, ulong_t vaddr,
         page->flags |= PAGE_LOCKED;
 
         /* check if it is an mmap'd page */
+        KASSERT(0);
         if (Is_Mmaped_Page(page->context, page->vaddr)) {
             mappedPage = true;
             if (page->entry->dirty) {

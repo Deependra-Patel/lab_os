@@ -173,4 +173,6 @@ void Spawn_Single_Command(struct Process *proc, const char *path) {
                 Print("Exit code was %d\n", exitCode);
         }
     }
+    int x;
+    x = 1;    
 }

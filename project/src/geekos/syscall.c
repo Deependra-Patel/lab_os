@@ -277,6 +277,7 @@ static int Sys_Spawn(struct Interrupt_State *state) {
  *   or error code (< 0) on error
  */
 static int Sys_Wait(struct Interrupt_State *state) {
+
     int exitCode;
     struct Kernel_Thread *kthread = Lookup_Thread(state->ebx, 0);
     if (kthread == 0) {
