@@ -39,6 +39,7 @@ extern Spin_Lock_t kthreadLock;
  */
 
 int x = 0;
+int mydebug = 0;
 
 // void Init_event_details(struct event_details* ed, struct Kernel_Thread* kt){
 //     ed->thread = kt;
@@ -867,13 +868,15 @@ struct Kernel_Thread *Get_Next_Runnable(void) {
  * if it is waiting for an event to occur).
  */
 void Schedule(void) {
-    if(x){
+    if(0){
         struct Kernel_Thread* cur = s_runQueue.head;
         while(cur!=NULL){
-            //Print("\n Inside schedule Pid: %d \n",cur->pid);
+            Print("\n Inside schedule Pid: %d \n",cur->pid);
             cur = cur->nextThread_Queue;
         }
+        KASSERT(0);
     }
+
 
     struct Kernel_Thread *runnable;
 
@@ -899,7 +902,8 @@ void Schedule(void) {
      * it was called from.
      */
     Switch_To_Thread(runnable);
-
+    
+    //KASSERT(0);
 }
 
 /*

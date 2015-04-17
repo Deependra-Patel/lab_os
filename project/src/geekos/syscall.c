@@ -179,7 +179,7 @@ static int Sys_PrintString(struct Interrupt_State *state) {
  *          -1 if this is a background process
  */
 static int Sys_GetKey(struct Interrupt_State *state) {
-
+    KASSERT(0);
     return Wait_For_Key();
 }
 
@@ -203,6 +203,7 @@ static int Sys_SetAttr(struct Interrupt_State *state) {
  */
 static int Sys_GetCursor(struct Interrupt_State *state) {
     int row, col;
+    // KASSERT(0);
     Get_Cursor(&row, &col);
     if (!Copy_To_User(state->ebx, &row, sizeof(int)) ||
         !Copy_To_User(state->ecx, &col, sizeof(int)))
@@ -277,7 +278,6 @@ static int Sys_Spawn(struct Interrupt_State *state) {
  *   or error code (< 0) on error
  */
 static int Sys_Wait(struct Interrupt_State *state) {
-
     int exitCode;
     struct Kernel_Thread *kthread = Lookup_Thread(state->ebx, 0);
     if (kthread == 0) {
@@ -651,6 +651,7 @@ static int Sys_Read(struct Interrupt_State *state) {
             Read(CURRENT_THREAD->userContext->
                  file_descriptor_table[state->ebx], data_buffer, state->edx);
         Disable_Interrupts();
+        KASSERT(0);
         if (!Copy_To_User(state->ecx, data_buffer, state->edx)) {
             Free(data_buffer);
             return EINVALID;
@@ -961,6 +962,7 @@ static int Sys_Disk_Properties(struct Interrupt_State *state) {
     Copy_User_String(state->ebx, state->ecx, 100, &path);
     Enable_Interrupts();
     rc = Disk_Properties(path, &block_size, &blocks_per_disk);
+    KASSERT(0);
     if (rc == 0) {
         Copy_To_User(state->edx, &block_size, sizeof(unsigned int));
         Copy_To_User(state->esi, &blocks_per_disk, sizeof(unsigned int));

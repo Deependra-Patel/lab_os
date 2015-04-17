@@ -94,6 +94,7 @@ void Detach_User_Context(struct Kernel_Thread *kthread) {
  *   should return ENOTFOUND if the reason for failure is that
  *   the executable file doesn't exist.
  */
+ extern int mydebug;
 int Spawn(const char *program, const char *command,
           struct Kernel_Thread **pThread, bool background) {
     int rc;
@@ -140,7 +141,7 @@ int Spawn(const char *program, const char *command,
         Free(exeFileData);
     if (userContext != 0)
         Destroy_User_Context(userContext);
-
+    KASSERT(0);
     return rc;
 }
 
@@ -168,8 +169,8 @@ void Switch_To_User_Context(struct Kernel_Thread *kthread,
     int cpuID;
     extern int userDebug;
     struct User_Context *userContext = kthread->userContext;
-    Print("pdir: %u\n", (uint_t)userContext->pageDir);
-    KASSERT(0);
+    // Print("pdir: %u\n", (uint_t)userContext->pageDir);
+    // KASSERT(0);
     /*
      * FIXME: could avoid resetting ss0/esp0 if not returning
      * to user space.

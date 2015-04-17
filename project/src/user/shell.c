@@ -72,6 +72,7 @@ int main(int argc __attribute__ ((unused)), char **argv
 
         /* Read a line of input */
         Read_Line(commandBuf, sizeof(commandBuf));
+
         command = Strip_Leading_Whitespace(commandBuf);
         Trim_Newline(command);
         background = Identify_and_Strip_Ampersand(command);

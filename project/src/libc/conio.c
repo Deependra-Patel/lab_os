@@ -11,6 +11,8 @@
 #include <fmtout.h>
 #include <string.h>
 #include <conio.h>
+#include <geekos/ktypes.h>
+#include <geekos/kassert.h>
 
 static bool s_echo = true;
 
@@ -74,7 +76,6 @@ void Read_Line(char *buf, size_t bufSize) {
     int startrow = 0, startcol = 0;
     Get_Cursor(&startrow, &startcol);
     /*Print("Start column is %d\n", startcol); */
-
     bufSize--;
     do {
         k = (Keycode) Get_Key();

@@ -36,7 +36,7 @@ extern pde_t *g_kernel_pde;
 uint_t user_vm_start = 1<<31;
 #define USER_VM_START user_vm_start
 #define USER_VM_LEN user_vm_start
-#define DEFAULT_STACK_SIZE PAGE_SIZE
+#define DEFAULT_STACK_SIZE 2*PAGE_SIZE
 
 int userDebug = 0;
 #define Debug(args...) if (userDebug) Print("uservm: " args)
@@ -135,7 +135,7 @@ uint_t lin_to_phyaddr(pde_t * page_dir, uint_t lin_address)
     }
 }
 
-bool mydebug = false;
+// bool mydebug = false;
 
 bool Copy_User_Page(pde_t * page_dir, uint_t dest_user, char * src, uint_t byte_num){
             Print("dest_user, %u, byte_num %d\n",dest_user, byte_num);     
@@ -277,6 +277,27 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     memcpy(pageDirectory, g_kernel_pde, PAGE_SIZE);
     memset(pageDirectory+512,'\0', PAGE_SIZE/2);
 
+//-------------------epic
+    pde_t* cur_pde_entry = pageDirectory + 1019;
+    pte_t * cur_pte;
+    cur_pde_entry->present=1;
+    cur_pde_entry->flags=VM_WRITE;
+    cur_pte=(pte_t *)Alloc_Page();
+
+    KASSERT(cur_pte!=NULL);
+
+    uint_t mem_addr = 1019*NUM_PAGE_TABLE_ENTRIES*(long long)(PAGE_SIZE);
+    memset(cur_pte,'\0',PAGE_SIZE);
+    cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
+    int j;
+    for(j = 0;j < PAGE_SIZE;j++){
+        cur_pte->present=1;
+        cur_pte->flags=VM_WRITE;
+        cur_pte->pageBaseAddr=mem_addr>>12;
+        cur_pte++;
+        mem_addr+=PAGE_SIZE;
+    }
+//----------------apic holeee ---------------
     uContext->pageDir=pageDirectory;
     Print("pdir: %u\n", (uint_t)pageDirectory);
     // KASSERT(0);
@@ -288,13 +309,11 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     uint_t lengthInFile=0;
     Print("numSeg: %d\n", exeFormat->numSegments);
     for(i=0; i<exeFormat->numSegments; i++){
-        if (i == 2) mydebug = true;
         startAddress = exeFormat->segmentList[i].startAddress;
         sizeInMemory = exeFormat->segmentList[i].sizeInMemory;
 
         offsetInFile = exeFormat->segmentList[i].offsetInFile;
         lengthInFile = exeFormat->segmentList[i].lengthInFile;
-        if ((sizeInMemory == 0) && (lengthInFile == 0)) continue;
 
         if(startAddress + sizeInMemory < USER_VM_LEN){
             Print("%d\n", startAddress+USER_VM_START);
@@ -302,6 +321,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
             if(res!=0){
                 return -1;
             }
+            if ((sizeInMemory == 0) && (lengthInFile == 0)) continue;
             Print("sizeinmem, %u leninfile: %d\n", sizeInMemory, lengthInFile);
             res=Copy_User_Page(pageDirectory, startAddress+USER_VM_START, exeFileData+offsetInFile, lengthInFile);
             if(res!=true){
@@ -368,7 +388,6 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
  * Returns true if successful, false otherwise.
  */
 bool Copy_From_User(void *destInKernel, ulong_t srcInUser, ulong_t numBytes) {
-    KASSERT(0);
 
     /*
      * Hints:
@@ -388,7 +407,15 @@ bool Copy_From_User(void *destInKernel, ulong_t srcInUser, ulong_t numBytes) {
      * interrupts are disabled; because no other process can run,
      * the page is guaranteed not to be stolen.
      */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Copy user data to kernel buffer");
+    struct User_Context* userContext=CURRENT_THREAD->userContext;
+    void* user_lin_addr=(void*)(USER_VM_START)+srcInUser;
+
+    if((srcInUser+numBytes) < userContext->size){
+        memcpy(destInKernel, user_lin_addr, numBytes);
+        return true;
+    }
+    return false;
+   // TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Copy user data to kernel buffer");
 }
 
 /*
@@ -396,7 +423,6 @@ bool Copy_From_User(void *destInKernel, ulong_t srcInUser, ulong_t numBytes) {
  * Returns true if successful, false otherwise.
  */
 bool Copy_To_User(ulong_t destInUser, void *srcInKernel, ulong_t numBytes) {
-    KASSERT(0);
 
     /*
      * Hints:
@@ -404,7 +430,14 @@ bool Copy_To_User(ulong_t destInUser, void *srcInKernel, ulong_t numBytes) {
      * - Also, make sure the memory is mapped into the user
      *   address space with write permission enabled
      */
-    TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Copy kernel data to user buffer");
+    struct User_Context* userContext=CURRENT_THREAD->userContext;
+    void* user_lin_addr = (void*)(USER_VM_START) + destInUser;
+    if((destInUser+numBytes) < userContext->size){
+        memcpy(user_lin_addr, srcInKernel ,numBytes);
+        return true;
+    }
+    return false;     
+    //TODO_P(PROJECT_VIRTUAL_MEMORY_A, "Copy kernel data to user buffer");
 }
 
 /*
@@ -449,12 +482,15 @@ void Switch_To_Address_Space(struct User_Context *userContext) {
      */
     if(userContext == 0){
         Print("the userContext is NULL!/n");
+        KASSERT(0);
         return;
     }
-Set_PDBR(userContext->pageDir);
-        KASSERT(0);
+        Set_PDBR(userContext->pageDir);
 
     Load_LDTR(userContext->ldtSelector);
+
+
+
     // TODO_P(PROJECT_VIRTUAL_MEMORY_A,
     //        "Switch_To_Address_Space() using paging");
 }

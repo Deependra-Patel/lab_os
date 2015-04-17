@@ -91,6 +91,7 @@ static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
 }
 //---------------------------------------------------------
 int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
+    
     Print("pagedir %d, startadd: %u, sizeInMemory: %d \n", (int)pageDir, startAddress, sizeInMemory);
     uint_t pagedir_index=startAddress>>22;
     uint_t page_index=(startAddress<<10)>>22;
@@ -391,6 +392,8 @@ void Init_Paging(void) {
  *   the paging file, or -1 if the paging file is full
  */
 int Find_Space_On_Paging_File(void) {
+        KASSERT(0);
+
     KASSERT(!Interrupts_Enabled()); 
     return Find_First_Free_Bit(BitmapPaging, numOfPagingPages);     
     //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Find free page in paging file");
@@ -403,6 +406,8 @@ int Find_Space_On_Paging_File(void) {
  * @param pagefileIndex index of the chunk of disk space
  */
 void Free_Space_On_Paging_File(int pagefileIndex) {
+        KASSERT(0);
+
     KASSERT(!Interrupts_Enabled());
      KASSERT(0 <= pagefileIndex && pagefileIndex < numOfPagingPages);
      Clear_Bit(BitmapPaging, pagefileIndex);    

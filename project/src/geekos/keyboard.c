@@ -354,6 +354,7 @@ Keycode Get_Test_Input() {
  * Uses the keyboard wait queue to sleep until
  * a keycode arrives.
  */
+extern int mydebug;
 Keycode Wait_For_Key(void) {
     bool gotKey, iflag;
     Keycode keycode = KEY_UNKNOWN;
@@ -370,12 +371,13 @@ Keycode Wait_For_Key(void) {
         gotKey = !Is_Queue_Empty();
         if (gotKey)
             keycode = Dequeue_Keycode();
-        else
+        else{
+            mydebug = 1;
             Wait(&s_waitQueue);
+        }
     }
     while (!gotKey);
 
     End_Int_Atomic(iflag);
-
     return keycode;
 }
