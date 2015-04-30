@@ -141,7 +141,7 @@ int Spawn(const char *program, const char *command,
         Free(exeFileData);
     if (userContext != 0)
         Destroy_User_Context(userContext);
-    KASSERT(0);
+    // KASSERT(0);
     return rc;
 }
 

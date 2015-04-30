@@ -19,6 +19,7 @@
 #include <geekos/ktypes.h>
 #include <geekos/kassert.h>
 #include <geekos/kthread.h>
+#include <geekos/user.h>
 #include <geekos/bootinfo.h>
 #include <geekos/gdt.h>
 #include <geekos/screen.h>
@@ -284,8 +285,16 @@ static void *Alloc_Or_Reclaim_Page(pte_t * entry, ulong_t vaddr,
     KASSERT(!Interrupts_Enabled());
     KASSERT(Is_Page_Multiple(vaddr));
 
-    paddr = Alloc_Page_Frame();
+    // KASSERT(0);
+    // if(replace < 1)
+    if(!(CURRENT_THREAD !=0 && CURRENT_THREAD->userContext!=0 && CURRENT_THREAD->userContext->pages >= MAX_USER_PAGES)){
+        paddr = Alloc_Page_Frame();
+    }
     if (paddr != 0) {
+        if(CURRENT_THREAD != 0 && CURRENT_THREAD->userContext != 0){
+            CURRENT_THREAD->userContext->pages += 1;
+        }
+
         page = Get_Page((ulong_t) paddr);
         KASSERT((page->flags & PAGE_PAGEABLE) == 0);
     } else {
@@ -306,7 +315,8 @@ static void *Alloc_Or_Reclaim_Page(pte_t * entry, ulong_t vaddr,
         page->flags |= PAGE_LOCKED;
 
         /* check if it is an mmap'd page */
-        KASSERT(0);
+            KASSERT(0);
+
         if (Is_Mmaped_Page(page->context, page->vaddr)) {
             mappedPage = true;
             if (page->entry->dirty) {
@@ -412,6 +422,11 @@ void *Alloc_Page(void) {
  *   in user address space
  */
 void *Alloc_Pageable_Page(pte_t * entry, ulong_t vaddr) {
+    // (CURRENT_THREAD->userContext)->pages += 1;
+    // // struct User_Context * temp = CURRENT_THREAD->userContext;
+    // Print("\npid :%d\n", (CURRENT_THREAD)->pid);
+    // KASSERT(0);
+    // KASSERT(0);
     return Alloc_Or_Reclaim_Page(entry, vaddr, false);
 }
 

@@ -41,6 +41,7 @@
 /* ----------------------------------------------------------------------
  * Public data
  * ---------------------------------------------------------------------- */
+pde_t *g_kernel_pde;
 
 /* ----------------------------------------------------------------------
  * Private functions/data
@@ -62,7 +63,7 @@ struct Paging_Device* pagingDevice;
 const pde_t *Kernel_Page_Dir(void) {
     TODO_P(PROJECT_VIRTUAL_MEMORY_A,
            "return kernel page directory and page tables");
-    return NULL;
+    return g_kernel_pde;;
 }
 
 
@@ -70,6 +71,12 @@ int myDebug = 0;
 /*
  * Print diagnostic information for a page fault.
  */
+int replace_val(){
+    // if(CURRENT_THREAD->userContext->pages >= MAX_USER_PAGES)
+    //     return 1;
+    return -1;
+}
+
 static void Print_Fault_Info(uint_t address, faultcode_t faultCode) {
     extern uint_t g_freePageCount;
 
@@ -99,11 +106,12 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
     pde_t * pagedir_entry=pageDir+pagedir_index;
     pte_t * page_entry;
 
-
+    // KASSERT(0);
     if(pagedir_entry->present){
         page_entry=(pte_t *)(pagedir_entry->pageTableBaseAddr<<12); 
     }
     else{
+        // KASSERT(0);
         page_entry=(pte_t*) Alloc_Page();
         if(page_entry==NULL) {
             Print("can not allocate page in Alloc_User_Page/n");
@@ -113,31 +121,40 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
         *((uint_t*)pagedir_entry)=0;
         pagedir_entry->present=1;
         pagedir_entry->flags=VM_WRITE | VM_READ | VM_USER;
-        pagedir_entry->globalPage=0;
+        // pagedir_entry->globalPage=0;
         pagedir_entry->pageTableBaseAddr=(ulong_t)page_entry >> 12;
     }
-
+    // KASSERT(0);
     page_entry+=page_index;
 
     int num_pages;
     void * page_addr;
     num_pages=Round_Up_To_Page(startAddress-Round_Down_To_Page(startAddress)+sizeInMemory)/PAGE_SIZE;
 
-    Print("startAddress is %x,num_pages is %d/n",startAddress,num_pages);
-
+    // Print("startAddress is %x,num_pages is %d\n",startAddress,num_pages);
+    // KASSERT(0);
 
     int i;
     uint_t first_page_addr=0;
     for(i=0;i<num_pages;i++){
+        // KASSERT(0);
         if(!page_entry->present){
-            page_addr=Alloc_Pageable_Page(page_entry, Round_Down_To_Page(startAddress));
+          // KASSERT(0);
+            // Print("PID: %d, cur pages %d \n", CURRENT_THREAD->pid, CURRENT_THREAD->userContext->pages);
+            // CURRENT_THREAD->userContext->pages++;
+            // KASSERT(0);            
+            int x = -1;
+            page_addr=Alloc_Pageable_Page(page_entry, Round_Down_To_Page(startAddress));            
             if(page_addr==NULL) {
-                Print("can not allocate page in Alloc_User_Page/n");
+                Print("can not allocate page in Alloc_User_Page\n");
+                KASSERT(0);
                 return -1;
             }
+            // KASSERT(0);
             *((uint_t*)page_entry)=0;
             page_entry->present=1;
             page_entry->flags=VM_WRITE | VM_READ | VM_USER;
+            // page_entry->flags= VM_USER;
             page_entry->globalPage = 0;
             page_entry->pageBaseAddr = (ulong_t)page_addr>>12;
             KASSERT(page_addr!= 0);
@@ -145,6 +162,7 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
                 first_page_addr = (uint_t) page_addr;
             } 
         }
+        // KASSERT(0);
         page_entry++;
         startAddress+=PAGE_SIZE; 
     }
@@ -160,6 +178,7 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
  */
 static void Page_Fault_Handler(struct Interrupt_State *state) {
     // KASSERT(0);
+
    ulong_t address;
     faultcode_t faultCode;
 
@@ -167,7 +186,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
  // Update_Clock();
     /* Get the address that caused the page fault */
     address = Get_Page_Fault_Address();
-    Debug("Page fault @%lx/n=========================", address);
+    // Debug("Page fault @%lx/n=========================", address);
     /* Get the fault code */
     faultCode = *((faultcode_t *) &(state->errorCode));
  
@@ -176,8 +195,12 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
  { 
   //mydebug
   //Print("write Fault/n");
+    // KASSERT(0);
   int res;
+    //   Print("cur pages %d\n", CURRENT_THREAD->userContext->pages);
+    // KASSERT(0);
   res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
+  
   if(res==-1)
   {
    //Print("Alloc_User_Page error in Page_Fault_Handler/n");
@@ -331,104 +354,185 @@ void Idenity_Map_Page(pde_t * currentPageDir, unsigned int address, int flags) {
  * for the kernel and physical memory.
  */
 extern Interrupt_Handler* g_interruptTable;
-pde_t *g_kernel_pde = {0};
 
 void Init_VM(struct Boot_Info *bootInfo) {
-    int  kernel_pde_entries;
-    int  whole_pages;
-    int  i,j;
-    uint_t mem_addr;
-    pte_t * cur_pte;
+   int num_dir_entries = (bootInfo->memSizeKB/4)/NUM_PAGE_TABLE_ENTRIES + 1;
+    Print("%d", num_dir_entries);
+    // KASSERT(0);
+    g_kernel_pde =  Alloc_Page();
+    if(g_kernel_pde == NULL)
+        KASSERT(0);
+    memset(g_kernel_pde, '\0', PAGE_SIZE);
+    pte_t* cur_pte;
+    pte_t *first_pte;
+    pde_t* cur_pde;
+    int i=0, j;
+    uint_t mem;
+    for(i=0; i<33; i++){
+        g_kernel_pde[i].flags = VM_WRITE | VM_USER;
+        g_kernel_pde[i].present = 1;
+        // cur_pde->globalPage = 1;
+        first_pte = Alloc_Page();
+            if(first_pte == NULL)
+                KASSERT(0); 
+        memset(first_pte, '\0', PAGE_SIZE);
+        g_kernel_pde[i].pageTableBaseAddr = ((uint_t)first_pte)>>12;
+        int j;
 
-    whole_pages=bootInfo->memSizeKB/4;
-    Print("whole pages are %d\n",whole_pages);
-    kernel_pde_entries=whole_pages/NUM_PAGE_DIR_ENTRIES+(whole_pages%NUM_PAGE_DIR_ENTRIES==0 ? 0:1);
-    Print("kdep %d\n",kernel_pde_entries);
-    Print("the kernel_pde_entries is %d\n",kernel_pde_entries);
-    //KASSERT(0);
+        mem = i*NUM_PAGE_TABLE_ENTRIES*PAGE_SIZE;
+        for(j=0; j<NUM_PAGE_TABLE_ENTRIES; j++){
+            // cur_pte = &first_pte[j];
+            // *cur_pte = 0;   
+            // first_pte[j] = (struct pte_t){0};         
+            if(i==0 && j==0){
+                mem += PAGE_SIZE;
+                continue;
+            }
 
-    g_kernel_pde=(pde_t *)Alloc_Page();
-    Print("KERNALADD: %d\n", (int)g_kernel_pde);
-
-    memset(g_kernel_pde,'\0',PAGE_SIZE);
-
-    pde_t * cur_pde_entry;
-    cur_pde_entry=g_kernel_pde;
-    mem_addr=0;
-    for(i=0;i<kernel_pde_entries;i++){
-        cur_pde_entry->present=1;
-        cur_pde_entry->flags=VM_WRITE | VM_USER;
-       // cur_pde_entry->kernelInfo = KINFO_PAGE_ON_DISK;
-        // cur_pde_entry->accessed = 0;
-        // cur_pde_entry->reserved = 0;
-        // cur_pde_entry->globalPage=0;
-        Print("I: %d\n", i);
-
-        cur_pte=(pte_t *)Alloc_Page();
-        KASSERT(cur_pte!=NULL);
-
-        memset(cur_pte,'\0',PAGE_SIZE);
-        cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
-        mem_addr = i*NUM_PAGE_TABLE_ENTRIES*PAGE_SIZE;
-        int last_pagetable_num;
-        last_pagetable_num=whole_pages%NUM_PAGE_TABLE_ENTRIES;
-        if(last_pagetable_num==0 || i!=(kernel_pde_entries-1)){
-          last_pagetable_num=NUM_PAGE_TABLE_ENTRIES;
+            first_pte[j].present = 1;
+            // cur_pte->globalPage = 1;
+            first_pte[j].flags = VM_WRITE | VM_USER;
+            first_pte[j].pageBaseAddr = mem>>12;
+            mem += PAGE_SIZE;
         }
-        // int temp = 0;
-        // if (i == 0){
-        //     temp = 1;
-        //     cur_pte++;
-        //     mem_addr+=PAGE_SIZE;
-        // }
-        for(j=0;j<last_pagetable_num;j++){
-            cur_pte->present=1;
-            cur_pte->flags=VM_WRITE|VM_USER;
-            // cur_pte->globalPage=0;  
-            cur_pte->pageBaseAddr=mem_addr>>12;
-            //cur_pte->kernelInfo = KINFO_PAGE_ON_DISK;
-            cur_pte++;
-            mem_addr+=PAGE_SIZE;
-        }
-        cur_pde_entry++;
-    }
-    //APIC HOLE
-    cur_pde_entry = g_kernel_pde + 1019;
-    cur_pde_entry->present=1;
-    cur_pde_entry->flags=VM_WRITE | VM_USER;
-    cur_pte=(pte_t *)Alloc_Page();
-
-    KASSERT(cur_pte!=NULL);
-
-    mem_addr = 1019*NUM_PAGE_TABLE_ENTRIES*(long long)(PAGE_SIZE);
-    memset(cur_pte,'\0',PAGE_SIZE);
-    cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
-
-    for(j = 0;j < PAGE_SIZE;j++){
-        cur_pte->present=1;
-        cur_pte->flags=VM_WRITE|VM_USER;
-        cur_pte->pageBaseAddr=mem_addr>>12;
-        cur_pte++;
-        mem_addr+=PAGE_SIZE;
     }
 
+    // for(i = 960; i<=1019; i++){
+    i = 1019;
+    // cur_pde = &g_kernel_pde[i];
+    g_kernel_pde[i].present = 1;
+    // cur_pde->globalPage = 1;
+    g_kernel_pde[i].flags = VM_WRITE | VM_USER;
+    first_pte = Alloc_Page();
+    if(first_pte == NULL)
+        KASSERT(0);
+    g_kernel_pde[i].pageTableBaseAddr = ((uint_t)first_pte)>>12;
+    memset(first_pte, '\0', PAGE_SIZE);
 
-    //int *a = 4096;
-    Print("CUr thread%d\n", (int)CURRENT_THREAD);
 
-    Print("Converted: %d\n", ((int)(((pte_t*)(g_kernel_pde->pageTableBaseAddr<<12)+1)->pageBaseAddr<<12))+1);
-
+    mem = i*NUM_PAGE_TABLE_ENTRIES*(long long)PAGE_SIZE;
+    // Print("mem %x", mem);
+    for(j=0; j<NUM_PAGE_TABLE_ENTRIES; j++){
+        cur_pte = &first_pte[j];
+        first_pte[j].present = 1;
+        // cur_pte->globalPage = 1;
+        first_pte[j].flags = VM_WRITE | VM_USER;
+        first_pte[j].pageBaseAddr = mem>>12;
+        mem += PAGE_SIZE;
+    }
+    // KASSERT(0);
+    
     Enable_Paging(g_kernel_pde);
-    Print("%d", (int)*g_interruptTable);
-    //KASSERT(0);    
-    Print("dddddddddddddddddddddddddddd");
-    myDebug = 1;
-    Install_Interrupt_Handler(14,Page_Fault_Handler);
-        if(myDebug){
-        Print("heeeeeeeeeeeeeeeee");
-        // KASSERT(0);
-    }
+    Install_Interrupt_Handler(14, Page_Fault_Handler);
+    Install_Interrupt_Handler(46, Page_Fault_Handler);
+
 }
+
+
+//     int  kernel_pde_entries;
+//     int  whole_pages;
+//     int  i,j;
+//     uint_t mem_addr;
+//     pte_t * cur_pte;
+
+//     whole_pages=bootInfo->memSizeKB/4;
+//     Print("whole pages are %d\n",whole_pages);
+//     kernel_pde_entries=whole_pages/NUM_PAGE_TABLE_ENTRIES+1;//(whole_pages%NUM_PAGE_TABLE_ENTRIES==0 ? 0:1);
+//     Print("kdep %d\n",kernel_pde_entries);
+//     Print("the kernel_pde_entries is %d\n",kernel_pde_entries);
+//     //KASSERT(0);
+
+//     g_kernel_pde=(pde_t *)Alloc_Page();
+//     Print("KERNALADD: %d\n", (int)g_kernel_pde);
+
+//     memset(g_kernel_pde,'\0',PAGE_SIZE);
+
+//     pde_t * cur_pde_entry;
+//     cur_pde_entry=g_kernel_pde;
+//     mem_addr=0;
+//     for(i=0;i<kernel_pde_entries;i++){
+//         cur_pde_entry->present=1;
+//         cur_pde_entry->flags=VM_WRITE | VM_USER;
+//        // cur_pde_entry->kernelInfo = KINFO_PAGE_ON_DISK;
+//         // cur_pde_entry->accessed = 0;
+//         // cur_pde_entry->reserved = 0;
+//         cur_pde_entry->globalPage=1;
+//         Print("I: %d\n", i);
+
+//         cur_pte=(pte_t *)Alloc_Page();
+//         KASSERT(cur_pte!=NULL);
+
+//         memset(cur_pte,'\0',PAGE_SIZE);
+//         cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
+//         mem_addr = i*NUM_PAGE_TABLE_ENTRIES*PAGE_SIZE;
+//         int last_pagetable_num;
+//         //last_pagetable_num=whole_pages%NUM_PAGE_TABLE_ENTRIES;
+//         // if(last_pagetable_num==0 || i!=(kernel_pde_entries-1)){
+//         //   last_pagetable_num=NUM_PAGE_TABLE_ENTRIES;
+//         // }
+//           last_pagetable_num=NUM_PAGE_TABLE_ENTRIES;
+
+//         // int temp = 0;
+//         // if (i == 0){
+//         //     temp = 1;
+//         //     cur_pte++;
+//         //     mem_addr+=PAGE_SIZE;
+//         // }
+//         for(j=0;j<last_pagetable_num;j++){
+//             // if(i==0 && j==0) {
+//             //     cur_pte++;
+//             //     continue;
+//             // }
+//             cur_pte->present=1;
+//             cur_pte->flags=VM_WRITE|VM_USER;
+//             cur_pte->globalPage=1;  
+//             cur_pte->pageBaseAddr=mem_addr>>12;
+//             //cur_pte->kernelInfo = KINFO_PAGE_ON_DISK;
+//             cur_pte++;
+//             mem_addr+=PAGE_SIZE;
+//         }
+//         cur_pde_entry++;
+//         Print("%d curpde %d\n", i, (int)cur_pde_entry);
+//     }
+//     // KASSERT(0);
+//     //APIC HOLE
+//     cur_pde_entry = &g_kernel_pde[1019];
+//     // cur_pde_entry += 1019;
+//     cur_pde_entry->present=1;
+//     cur_pde_entry->flags=VM_WRITE | VM_USER;
+//     cur_pte=(pte_t *)Alloc_Page();
+
+//     KASSERT(cur_pte!=NULL);
+
+//     mem_addr = 1019*NUM_PAGE_TABLE_ENTRIES*(long long)(PAGE_SIZE);
+//     memset(cur_pte,'\0',PAGE_SIZE);
+//     cur_pde_entry->pageTableBaseAddr=(uint_t)cur_pte>>12;
+
+//     for(j = 0;j < NUM_PAGE_TABLE_ENTRIES;j++){
+//         cur_pte->present=1;
+//         cur_pte->flags=VM_WRITE|VM_USER;
+//         cur_pte->pageBaseAddr=mem_addr>>12;
+//         cur_pte++;
+//         mem_addr+=PAGE_SIZE;
+//     }
+
+
+//     //int *a = 4096;
+//     Print("CUr thread%d\n", (int)CURRENT_THREAD);
+
+//     Print("Converted: %d\n", ((int)(((pte_t*)(g_kernel_pde->pageTableBaseAddr<<12)+1)->pageBaseAddr<<12))+1);
+
+//     Enable_Paging(g_kernel_pde);
+//     Print("%d", (int)*g_interruptTable);
+//     //KASSERT(0);    
+//     Print("dddddddddddddddddddddddddddd");
+//     myDebug = 1;
+//     Install_Interrupt_Handler(14,Page_Fault_Handler);
+//         if(myDebug){
+//         Print("heeeeeeeeeeeeeeeee");
+//         // KASSERT(0);
+//     }
+// }
 
 void Init_Secondary_VM() {
     TODO_P(PROJECT_VIRTUAL_MEMORY_A, "enable paging on secondary cores");
@@ -462,8 +566,6 @@ void Init_Paging(void) {
  *   the paging file, or -1 if the paging file is full
  */
 int Find_Space_On_Paging_File(void) {
-        KASSERT(0);
-
     KASSERT(!Interrupts_Enabled()); 
     return Find_First_Free_Bit(BitmapPaging, numOfPagingPages);     
     //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Find free page in paging file");
@@ -493,8 +595,6 @@ void Free_Space_On_Paging_File(int pagefileIndex) {
  *   in the paging file
  */
 void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
-
-    KASSERT(0);
     struct Page *page = Get_Page((ulong_t) paddr);
     KASSERT(!(page->flags & PAGE_PAGEABLE)); /* Page must be locked! */
     KASSERT((page->flags & PAGE_LOCKED));
@@ -510,7 +610,8 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
         Print("In func Write_To_Paging_File: pagefileIndex out of range!");
         KASSERT(0);
         Exit(-1);
-    }  
+    } 
+    KASSERT(0); 
     //struct Page *page = Get_Page((ulong_t) paddr);
     //KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
     // TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Write page data to paging file");

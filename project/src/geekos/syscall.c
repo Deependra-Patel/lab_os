@@ -179,7 +179,7 @@ static int Sys_PrintString(struct Interrupt_State *state) {
  *          -1 if this is a background process
  */
 static int Sys_GetKey(struct Interrupt_State *state) {
-    KASSERT(0);
+    // KASSERT(0);
     return Wait_For_Key();
 }
 

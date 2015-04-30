@@ -979,7 +979,7 @@ int Join(struct Kernel_Thread *kthread) {
         
         Wait(&kthread->joinQueue);
         // Print("in while\n");
-        KASSERT(0);
+        // KASSERT(0);
     }
 
     /* Get thread exit code. */

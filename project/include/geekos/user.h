@@ -15,6 +15,7 @@
 
 #ifndef GEEKOS_USER_H
 #define GEEKOS_USER_H
+#define MAX_USER_PAGES 10
 
 /* Information communicated by the PS system call */
 
@@ -104,7 +105,7 @@ struct User_Context {
     char name[MAX_PROC_NAME_SZB];
 
 
-
+    int pages;
 
     mappedRegion_t *mappedRegions;
 };

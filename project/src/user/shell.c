@@ -61,13 +61,13 @@ int factorial(int x){
     Print("aefhs %d\n", x);
     if(x==1)
         return 1;
-    else return 1*factorial(x-1);
+    else return x*factorial(x-1);
 }
 
 int pageWrite(int x){
     if(x == 0)
         return 1;
-    char buf[1000];
+    char buf[1000][1000];
     int i;
     // for(i=0; i<1000; i++)
     //     buf[i] = 'x';
@@ -86,16 +86,16 @@ int main(int argc __attribute__ ((unused)), char **argv
 
     /* Set attribute to gray on black. */
     Print("\x1B[37m");
-        Print("Calc Fcat");
-        int x = 100;
-    int p;
+    //     Print("Calc Fcat");
+    //     int x = 100;
+    // int p;
     //     char buf[1000];
     //     int op = ReadBlock("/c/user/pass.txt", buf, 1024, 1);
-    p = pageWrite(x);
-    Print("Page read done\n");
-    // p = factorial(x);
-    Print("%d", p);
-    Print("here\n");
+    // p = pageWrite(x);
+    // Print("Page read done\n");
+    // p = factorial(5);
+    // Print("%d", p);
+    // Print("here\n");
 
     while (true) {
         /* Print shell prompt (bright cyan on black background) */
