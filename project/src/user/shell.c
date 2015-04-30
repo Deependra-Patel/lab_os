@@ -19,6 +19,7 @@
 #include <conio.h>
 #include <process.h>
 #include <string.h>
+#include <fileio.h>
 
 #define BUFSIZE 79
 #define DEFAULT_PATH "/c:/a"
@@ -56,8 +57,28 @@ bool background;                /* making it global is lame, but keeps the signa
 
 int exitCodes = 0;
 
+int factorial(int x){
+    Print("aefhs %d\n", x);
+    if(x==1)
+        return 1;
+    else return 1*factorial(x-1);
+}
+
+int pageWrite(int x){
+    if(x == 0)
+        return 1;
+    char buf[1000];
+    int i;
+    // for(i=0; i<1000; i++)
+    //     buf[i] = 'x';
+    // int op = ReadBlock("/c/user/pass.txt", buf, 1024, 1);
+    Print("%d\n\n\n", x);
+    pageWrite(x-1);
+    return 1; 
+}
+
 int main(int argc __attribute__ ((unused)), char **argv
-         __attribute__ ((unused))) {
+    __attribute__ ((unused))) {
     char commandBuf[BUFSIZE + 1];
     struct Process proc;
     char path[BUFSIZE + 1] = DEFAULT_PATH;
@@ -65,6 +86,16 @@ int main(int argc __attribute__ ((unused)), char **argv
 
     /* Set attribute to gray on black. */
     Print("\x1B[37m");
+        Print("Calc Fcat");
+        int x = 100;
+    int p;
+    //     char buf[1000];
+    //     int op = ReadBlock("/c/user/pass.txt", buf, 1024, 1);
+    p = pageWrite(x);
+    Print("Page read done\n");
+    // p = factorial(x);
+    Print("%d", p);
+    Print("here\n");
 
     while (true) {
         /* Print shell prompt (bright cyan on black background) */

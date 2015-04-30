@@ -159,93 +159,163 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
  * register this function as the handler for interrupt 14.
  */
 static void Page_Fault_Handler(struct Interrupt_State *state) {
-    KASSERT(0);
-    Print("In PF handler\n");
-    ulong_t address;
+    // KASSERT(0);
+   ulong_t address;
     faultcode_t faultCode;
 
     KASSERT(!Interrupts_Enabled());
-
+ // Update_Clock();
     /* Get the address that caused the page fault */
     address = Get_Page_Fault_Address();
-
-    //Debug("Page fault @%lx\n", address);
-
-    if (address < 0xfec01000 && address > 0xf0000000) {
-        KASSERT0(0, "page fault address in APIC/IOAPIC range\n");
-    }
-    Print("In PF22 handler \n");
+    Debug("Page fault @%lx/n=========================", address);
     /* Get the fault code */
-    faultCode = *((faultcode_t *) & (state->errorCode));
-    Print_Fault_Info(address, faultCode);
-    Print("herere");
-    /* rest of your handling code here */
-    //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "handle page faults");
+    faultCode = *((faultcode_t *) &(state->errorCode));
+ 
+ struct User_Context* userContext = CURRENT_THREAD->userContext;
+ if(faultCode.writeFault)
+ { 
+  //mydebug
+  //Print("write Fault/n");
+  int res;
+  res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
+  if(res==-1)
+  {
+   //Print("Alloc_User_Page error in Page_Fault_Handler/n");
+   Exit(-1);
+  }
+  return ;
+ }
+ else
+ { 
+  //mydebug
+  //Print("read fault/n");
+  ulong_t page_dir_addr=address >> 22;
+  ulong_t page_addr=(address << 10) >> 22;
+  pde_t * page_dir_entry=(pde_t*)userContext->pageDir+page_dir_addr;
+  pte_t * page_entry= NULL;
+  if(page_dir_entry->present)
+  {
+   page_entry=(pte_t*)((page_dir_entry->pageTableBaseAddr) << 12);
+   page_entry+=page_addr;
+  }
+  else
+  { 
+   Print_Fault_Info(address,faultCode);
+   Exit(-1);
+  }
 
-    //TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
+  if(page_entry->kernelInfo!=KINFO_PAGE_ON_DISK)
+  {
+   Print_Fault_Info(address,faultCode);
+   Exit(-1);
+  }
+  int pagefile_index = page_entry->pageBaseAddr;
+  void * paddr=Alloc_Pageable_Page(page_entry,Round_Down_To_Page(address));
+  if(paddr==NULL)
+  {
+   Print("no more page/n");
+   Exit(-1);
+  }
 
-//---------------------------------------------------------------
-    struct User_Context* userContext = CURRENT_THREAD->userContext;
+  *((uint_t*)page_entry)=0;
+  page_entry->present=1;
+  page_entry->flags=VM_WRITE | VM_READ | VM_USER;
+  page_entry->globalPage = 0;
+  page_entry->pageBaseAddr = (ulong_t)paddr>>12;
+  Enable_Interrupts();
+  KASSERT(0);
+  Read_From_Paging_File(paddr,Round_Down_To_Page(address), pagefile_index);
+  Disable_Interrupts();
+  Free_Space_On_Paging_File(pagefile_index);
+  return ;
+ }
 
-    if(faultCode.writeFault){ 
-        //Print("write Fault/n");
-        int res;
-        res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
-        if(res==-1){
-            //Print("Alloc_User_Page error in Page_Fault_Handler/n");
-            Exit(-1);
-        }
-        return ;
-    }
-    else{
-        ulong_t page_dir_addr= PAGE_DIRECTORY_INDEX(address);
-        ulong_t page_addr= PAGE_TABLE_INDEX(address);
-        pde_t * page_dir_entry=(pde_t*)userContext->pageDir+page_dir_addr;
-        pte_t * page_entry= NULL;
-        if(page_dir_entry->present){
-            page_entry=(pte_t*)((page_dir_entry->pageTableBaseAddr) << 12);
-            page_entry+=page_addr;
-        }
-        else{
-            Print_Fault_Info(address,faultCode);
-            Exit(-1);
-        }
+//     Print("In PF handler\n");
+//     ulong_t address;
+//     faultcode_t faultCode;
 
-        if(page_entry->kernelInfo!=KINFO_PAGE_ON_DISK){
-            Print_Fault_Info(address,faultCode);
-            Exit(-1);
-        }
-        int pagefile_index = page_entry->pageBaseAddr;
-        void * paddr=Alloc_Pageable_Page(page_entry,Round_Down_To_Page(address));
-        if(paddr==NULL){
-            Print("no more page/n");
-            Exit(-1);
-        }
+//     KASSERT(!Interrupts_Enabled());
 
-        *((uint_t*)page_entry)=0;
-        page_entry->present=1;
-        page_entry->flags=VM_WRITE | VM_READ | VM_USER;
-        page_entry->globalPage = 0;
-        page_entry->pageBaseAddr = (ulong_t)paddr>>12;
-        Enable_Interrupts();
-        Read_From_Paging_File(paddr,Round_Down_To_Page(address), pagefile_index);//,page_entry);
-        Disable_Interrupts();
-        Free_Space_On_Paging_File(pagefile_index);
-        return ;
-    }
-    //---------------------------------------------------------------
-    error:
-    Print("Page fault @%lx\n", address);
-    Print("KASSSSSSSSSSSSSSSSSSSSSSSS\n");
-    Print("Unexpected Page Fault received\n");
-    Print_Fault_Info(address, faultCode);
-    Dump_Interrupt_State(state);
-    /* user faults just kill the process */
-    if (!faultCode.userModeFault)
-        KASSERT0(0, "unhandled kernel-mode page fault.");
+//     /* Get the address that caused the page fault */
+//     address = Get_Page_Fault_Address();
 
-    /* For now, just kill the thread/process. */
-    Exit(-1);
+//     //Debug("Page fault @%lx\n", address);
+
+//     if (address < 0xfec01000 && address > 0xf0000000) {
+//         KASSERT0(0, "page fault address in APIC/IOAPIC range\n");
+//     }
+//     Print("In PF22 handler \n");
+//     /* Get the fault code */
+//     faultCode = *((faultcode_t *) & (state->errorCode));
+//     Print_Fault_Info(address, faultCode);
+//     Print("herere");
+//     /* rest of your handling code here */
+//     //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "handle page faults");
+
+//     //TODO_P(PROJECT_MMAP, "handle mmap'd page faults");
+
+// //---------------------------------------------------------------
+//     struct User_Context* userContext = CURRENT_THREAD->userContext;
+
+//     if(faultCode.writeFault){ 
+//         //Print("write Fault/n");
+//         int res;
+//         res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
+//         if(res==-1){
+//             //Print("Alloc_User_Page error in Page_Fault_Handler/n");
+//             Exit(-1);
+//         }
+//         return ;
+//     }
+//     else{
+//         ulong_t page_dir_addr= PAGE_DIRECTORY_INDEX(address);
+//         ulong_t page_addr= PAGE_TABLE_INDEX(address);
+//         pde_t * page_dir_entry=(pde_t*)userContext->pageDir+page_dir_addr;
+//         pte_t * page_entry= NULL;
+//         if(page_dir_entry->present){
+//             page_entry=(pte_t*)((page_dir_entry->pageTableBaseAddr) << 12);
+//             page_entry+=page_addr;
+//         }
+//         else{
+//             Print_Fault_Info(address,faultCode);
+//             Exit(-1);
+//         }
+
+//         if(page_entry->kernelInfo!=KINFO_PAGE_ON_DISK){
+//             Print_Fault_Info(address,faultCode);
+//             Exit(-1);
+//         }
+//         int pagefile_index = page_entry->pageBaseAddr;
+//         void * paddr=Alloc_Pageable_Page(page_entry,Round_Down_To_Page(address));
+//         if(paddr==NULL){
+//             Print("no more page/n");
+//             Exit(-1);
+//         }
+
+//         *((uint_t*)page_entry)=0;
+//         page_entry->present=1;
+//         page_entry->flags=VM_WRITE | VM_READ | VM_USER;
+//         page_entry->globalPage = 0;
+//         page_entry->pageBaseAddr = (ulong_t)paddr>>12;
+//         Enable_Interrupts();
+//         Read_From_Paging_File(paddr,Round_Down_To_Page(address), pagefile_index);//,page_entry);
+//         Disable_Interrupts();
+//         Free_Space_On_Paging_File(pagefile_index);
+//         return ;
+//     }
+//     //---------------------------------------------------------------
+//     error:
+//     Print("Page fault @%lx\n", address);
+//     Print("KASSSSSSSSSSSSSSSSSSSSSSSS\n");
+//     Print("Unexpected Page Fault received\n");
+//     Print_Fault_Info(address, faultCode);
+//     Dump_Interrupt_State(state);
+//     /* user faults just kill the process */
+//     if (!faultCode.userModeFault)
+//         KASSERT0(0, "unhandled kernel-mode page fault.");
+
+//     /* For now, just kill the thread/process. */
+//     Exit(-1);
 }
 
 void Idenity_Map_Page(pde_t * currentPageDir, unsigned int address, int flags) {
