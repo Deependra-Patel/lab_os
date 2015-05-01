@@ -187,7 +187,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
     Update_Clock();
     /* Get the address that caused the page fault */
     address = Get_Page_Fault_Address();
-    // Debug("Page fault @%lx/n=========================", address);
+    Print("Page fault @%lx/n=========================", address);
     /* Get the fault code */
     faultCode = *((faultcode_t *) &(state->errorCode));
  
@@ -603,12 +603,12 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
     if(0 <= pagefileIndex && pagefileIndex < numOfPagingPages){
         int i,j;
         for (j=0; j<1024; j++) {
-            *((int *)(paddr + j)) =  1;
+            // if (*((int *)(paddr + j)) != 0) KASSERT(0);
              // Print("ass: %d\n", *((int *)(paddr + j)));
          }
-         
+
          // Print("ind %d\n", (int)pagingDevice->startSector);
-         KASSERT(0);
+         
 
         for(i = 0;i < SECTORS_PER_PAGE; i++){
             // Print("i %d\n", i);
@@ -616,7 +616,6 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
             Block_Write(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
             // Block_Read(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
         }
-         KASSERT(0);
         Set_Bit(BitmapPaging, pagefileIndex); 
     }
     else {
@@ -640,6 +639,8 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
  *   in the paging file
  */
 void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
+    Print("Reading physical frame %p from paging file at index %d\n", paddr,
+                  pagefileIndex);
     struct Page *page = Get_Page((ulong_t) paddr);
     Print("flags: %x\n", page->flags);
     // KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
@@ -654,7 +655,8 @@ void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
         Print("In func Write_To_Paging_File: pagefileIndex out of range!");
         KASSERT(0);
         Exit(-1);
-    }     
+    }  
+    Print("Reading Done.\n");   
 
     //TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Read page data from paging file");
 }

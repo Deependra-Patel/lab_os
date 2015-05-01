@@ -15,6 +15,7 @@
 #include <geekos/kthread.h>
 #include <geekos/synch.h>
 #include <geekos/blockdev.h>
+#include <geekos/vfs.h>
 
 /*#define BLOCKDEV_DEBUG */
 #ifdef BLOCKDEV_DEBUG
@@ -51,10 +52,12 @@ static struct Block_Device_List s_deviceList;
  * Perform a block IO request.
  * Returns 0 if successful, error code on failure.
  */
+extern struct Paging_Device *Get_Paging_Device(void);
 static int Do_Request(struct Block_Device *dev, enum Request_Type type,
                       int blockNum, void *buf) {
     struct Block_Request *request;
     int rc;
+
 
     // Print("about to do_req\n");
     Mutex_Lock(&s_blockdevLock);
@@ -64,7 +67,7 @@ static int Do_Request(struct Block_Device *dev, enum Request_Type type,
         // Print("req returned null\n");
         Mutex_Unlock(&s_blockdevLock);
         return ENOMEM;
-    }
+    }    
     // Print("about to post\n");
     Post_Request_And_Wait(request);
     rc = request->errorCode;
@@ -199,11 +202,16 @@ void Post_Request_And_Wait(struct Block_Request *request) {
     dev = request->dev;
     KASSERT(dev != 0);
     int i;
-    for (i=0; i<10; i++) {
-        Print("req: %d\n", *((int*)(request->buf+i)));
-    }
-    // KASSERT(0);
+    struct Paging_Device* temp = Get_Paging_Device();
+    // if(temp && ((temp->dev)->name[2] == dev->name[2])){
+    //     for (i = 0; i < 1024; ++i)
+    //     {
+    //             if (*((int *)(request->buf + i)) != 0) KASSERT(0);
 
+    //             Print("here :%d\n", *((int *)(request->buf + i)));
+    // /* code */
+    //     }
+    // }
     /* Send request to the driver */
     Debug("Posting block device request [@%x]...\n", request);
     Disable_Interrupts();
@@ -275,6 +283,7 @@ int Block_Write(struct Block_Device *dev, int blockNum, void *buf) {
     KASSERT(dev);
     KASSERT(buf);
     dev->writes++;
+
     return Do_Request(dev, BLOCK_WRITE, blockNum, buf);
 }
 

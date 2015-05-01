@@ -280,8 +280,8 @@ static struct Page *Find_Page_To_Page_Out() {
         clock_pointer = i;
         curr = &g_pageList[i];
         // Print("clock %d", g_pageList[i].clock);
-        if(curr->entry != 0)
-            curr->clock = curr->entry->accessed = 0;
+        // if(curr->entry != 0)
+        //     curr->clock = curr->entry->accessed = 0;
         // Print("clock %d", g_pageList[i].clock);
         if ((g_pageList[i].flags & PAGE_PAGEABLE) &&
             (g_pageList[i].flags & PAGE_ALLOCATED)) {
@@ -462,7 +462,7 @@ void *Alloc_Page(void) {
         extern void Hardware_Shutdown();
         Hardware_Shutdown();
     }
-
+    Print("Allocating pinned page.\n");
     return ret;
 }
 
@@ -481,6 +481,7 @@ void *Alloc_Pageable_Page(pte_t * entry, ulong_t vaddr) {
     // Print("\npid :%d\n", (CURRENT_THREAD)->pid);
     // KASSERT(0);
     // KASSERT(0);
+    Print("Allocating pageable page.\n");
     return Alloc_Or_Reclaim_Page(entry, vaddr, false);
 }
 

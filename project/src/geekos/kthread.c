@@ -975,7 +975,7 @@ int Join(struct Kernel_Thread *kthread) {
     /* Wait for it to die */
     while (kthread->alive) {
         // KASSERT(0);
-        Print("in while\n");
+        Print("Waiting Thread....\n");
         
         Wait(&kthread->joinQueue);
         // Print("in while\n");

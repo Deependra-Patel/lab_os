@@ -115,7 +115,7 @@ uint_t lin_to_phyaddr(pde_t * page_dir, uint_t lin_address)
     uint_t page_index = (lin_address<<10)>>22;
     uint_t offset_address = lin_address & 0xfff;
 
-    Print("pgdir: %d\n",pagedir_index);
+    // Print("pgdir: %d\n",pagedir_index);
     pde_t * pagedir_entry = page_dir+pagedir_index;
     pte_t * page_entry=0;
 
@@ -140,7 +140,7 @@ uint_t lin_to_phyaddr(pde_t * page_dir, uint_t lin_address)
 // bool mydebug = false;
 
 bool Copy_User_Page(pde_t * page_dir, uint_t dest_user, char * src, uint_t byte_num){
-            Print("dest_user, %u, byte_num %d\n",dest_user, byte_num);     
+            // Print("dest_user, %u, byte_num %d\n",dest_user, byte_num);     
     uint_t phy_start;
     uint_t temp_len;
     int page_nums;
@@ -301,7 +301,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     }
 //----------------apic holeee ---------------
     uContext->pageDir = pageDirectory;
-    Print("pdir: %u\n", (uint_t)pageDirectory);
+    // Print("pdir: %u\n", (uint_t)pageDirectory);
     // KASSERT(0);
     int i;
     int res;
@@ -309,7 +309,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     uint_t sizeInMemory=0;
     uint_t offsetInFile=0;
     uint_t lengthInFile=0;
-    Print("numSeg: %d\n", exeFormat->numSegments);
+    Print("Number of Segments -> %d\n", exeFormat->numSegments);
 
     for(i=0; i<exeFormat->numSegments; i++){
         startAddress = exeFormat->segmentList[i].startAddress;
@@ -319,7 +319,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
         lengthInFile = exeFormat->segmentList[i].lengthInFile;
 
         if(startAddress + sizeInMemory < USER_VM_LEN){
-            Print("%d\n", startAddress+USER_VM_START);
+            // Print("%d\n", startAddress+USER_VM_START);
             // KASSERT(0);
 
             res = Alloc_User_Page(pageDirectory, startAddress+USER_VM_START, sizeInMemory);
@@ -345,7 +345,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
 
     //mydebug
     //Print("next will handle block an stack in Load_User_Program!/n");
-    Print("Converted: %d\n", ((int)(((pte_t*)(pageDirectory[512].pageTableBaseAddr<<12))->pageBaseAddr<<12)));
+    // Print("Converted: %d\n", ((int)(((pte_t*)(pageDirectory[512].pageTableBaseAddr<<12))->pageBaseAddr<<12)));
     uint_t args_num;
     uint_t stack_addr;
     uint_t arg_addr;
@@ -388,7 +388,7 @@ int Load_User_Program(char *exeFileData, ulong_t exeFileLength,
     *pUserContext = uContext;
     // KASSERT(0);
     //mydebug
-    //Print("Load_User_Program will return!/n");
+    Print("Load_User_Program returned!\n");
     return 0;
 }
 
