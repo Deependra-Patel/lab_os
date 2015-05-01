@@ -788,6 +788,7 @@ struct Kernel_Thread *Start_Kernel_Thread(Thread_Start_Func startFunc,
 struct Kernel_Thread *Start_User_Thread(struct User_Context *userContext,
                                         bool detached) {
     struct Kernel_Thread *kthread = Create_Thread(PRIORITY_USER, detached);
+    // KASSERT(0);
     if (kthread != 0) {
         /* Set up the thread, and put it on the run queue */
         Setup_User_Thread(kthread, userContext);

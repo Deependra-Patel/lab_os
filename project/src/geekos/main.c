@@ -190,7 +190,7 @@ static void Spawn_Init_Process(void) {
     } else {
         /* Wait for it to exit */
         int exitCode = Join(initProcess);
-        KASSERT(0);
+        // KASSERT(0);
         
         Print("Init process exited with code %d\n", exitCode);
     }

@@ -77,9 +77,11 @@ struct User_Context * Create_User_Context(){
     user_context->stackPointerAddr=0;
     user_context->refCount=0;
     user_context->pages = 0;
+    user_context->numPageFaults = 0;
+
     return user_context;
 }
-
+extern int numPageFaults;
 void Destroy_User_Context(struct User_Context *userContext) {
     // KASSERT(0);
     /*
@@ -90,6 +92,8 @@ void Destroy_User_Context(struct User_Context *userContext) {
      * - Free semaphores, files, and other resources used
      *   by the process
      */
+    Print("No. of Page faults in previous process (Press enter):- %d\n", userContext->numPageFaults);
+    // KASSERT(0);
     KASSERT(userContext->refCount == 0);
 
     /* Free the context's LDT descriptor */

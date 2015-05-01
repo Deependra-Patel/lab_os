@@ -128,6 +128,7 @@ int Spawn(const char *program, const char *command,
 
 
     /* Start the process! */
+    // KASSERT(0);
     process = Start_User_Thread(userContext, background);
     if (process != 0) {
         /* Return Kernel_Thread pointer */

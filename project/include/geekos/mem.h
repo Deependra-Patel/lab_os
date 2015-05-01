@@ -74,6 +74,7 @@ struct Page {
     ulong_t vaddr;              /* User virtual address where page is mapped */
     pte_t *entry;               /* Page table entry referring to the page */
     struct User_Context *context;       /* User context that maps the page */
+    int refCount;
 };
 
 IMPLEMENT_LIST(Page_List, Page);

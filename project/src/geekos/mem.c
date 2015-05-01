@@ -93,6 +93,7 @@ static void Add_Page_Range(ulong_t start, ulong_t end, int flags) {
         page->vaddr = 0;
         page->context = NULL;
         page->entry = 0;
+        page->refCount = 0;
     }
 }
 
@@ -251,6 +252,14 @@ void Update_Clock(){
             curr->clock = curr->entry->accessed;
         else curr->clock = 0;
 
+        if(curr->entry != 0){
+            curr->refCount += curr->entry->accessed;
+            if(curr->refCount > MIN_REF_COUNT){
+                curr->flags |= PAGE_LOCKED;
+                // KASSERT(0);
+            }
+        }
+        // Print("");
         // Print("clock %d\n", curr->clock);
     }
     // KASSERT(0);
@@ -289,6 +298,9 @@ static struct Page *Find_Page_To_Page_Out() {
             if(!g_pageList[i].clock){
                 best = &g_pageList[i];
                 break;
+            }
+            else {
+                Print("page not selected for paging out: %d\n", i);
             }
             best->clock = 0;
             // if (!best)

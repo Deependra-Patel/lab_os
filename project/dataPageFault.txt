@@ -1,0 +1,12 @@
+
+
+MAX_USER_PAGES    NUM_PAGE_FAULT
+14 152
+15 152
+20 149
+50 133
+100 106
+200 103
+500 103
+note: min 14 pages required. 4kb pages. shell is 35KB (9 pages). 1 for buffer. 2 for stack.
+2 for user page table.

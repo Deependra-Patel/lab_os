@@ -16,7 +16,7 @@
 #ifndef GEEKOS_USER_H
 #define GEEKOS_USER_H
 #define MAX_USER_PAGES 100
-
+#define MIN_REF_COUNT 4
 /* Information communicated by the PS system call */
 
 #define MAX_PROC_NAME_SZB 128
@@ -106,6 +106,7 @@ struct User_Context {
 
 
     int pages;
+    int numPageFaults;
 
     mappedRegion_t *mappedRegions;
 };
