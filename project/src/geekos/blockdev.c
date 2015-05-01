@@ -198,6 +198,11 @@ void Post_Request_And_Wait(struct Block_Request *request) {
 
     dev = request->dev;
     KASSERT(dev != 0);
+    int i;
+    for (i=0; i<10; i++) {
+        Print("req: %d\n", *((int*)(request->buf+i)));
+    }
+    // KASSERT(0);
 
     /* Send request to the driver */
     Debug("Posting block device request [@%x]...\n", request);

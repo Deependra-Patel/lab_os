@@ -60,6 +60,8 @@ struct Page;
  * List datatype for doubly-linked list of Pages.
  */
 DEFINE_LIST(Page_List, Page);
+void Update_Clock(void);
+void Update_Clock_0(void);
 
 /*
  * Each page of physical memory has one of these structures

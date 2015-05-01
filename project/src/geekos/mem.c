@@ -37,7 +37,7 @@
  * List of Page structures representing each page of physical memory.
  */
 struct Page *g_pageList;
-
+int clock_pointer = 0;
 /*
  * Number of pages currently available on the freelist.
  */
@@ -240,25 +240,67 @@ static void *Alloc_Page_Frame(void) {
     return result;
 }
 
+//update clock
+void Update_Clock(){
+    unsigned int i;
+    struct Page *curr;
+    for (i = 0; i < s_numPages; i++) {
+        curr = &g_pageList[i];
+        // Print("clock %d", g_pageList[i].clock);
+        if(curr->entry != 0)
+            curr->clock = curr->entry->accessed;
+        else curr->clock = 0;
+
+        // Print("clock %d\n", curr->clock);
+    }
+    // KASSERT(0);
+}
+
+void Update_Clock_0(){
+    unsigned int i;
+    struct Page *curr;
+    for (i = 0; i < s_numPages; i++) {
+        curr = &g_pageList[i];
+        // Print("clock %d", g_pageList[i].clock);
+        if(curr->entry != 0)
+            curr->entry->accessed = 0;
+    }
+}
 /*
  * Choose a page to evict.
  * Returns null if no pages are available.
  */
+
 static struct Page *Find_Page_To_Page_Out() {
-    unsigned int i;
+    unsigned int i,j;
     struct Page *curr, *best;
     best = NULL;
-    for (i = 0; i < s_numPages; i++) {
+    for (j = 0; j < s_numPages; j++) {
+        i = (j+clock_pointer)%s_numPages;
+        clock_pointer = i;
+        curr = &g_pageList[i];
+        // Print("clock %d", g_pageList[i].clock);
+        if(curr->entry != 0)
+            curr->clock = curr->entry->accessed = 0;
+        // Print("clock %d", g_pageList[i].clock);
         if ((g_pageList[i].flags & PAGE_PAGEABLE) &&
             (g_pageList[i].flags & PAGE_ALLOCATED)) {
-            if (!best)
+            best = &g_pageList[i];
+            if(!g_pageList[i].clock){
                 best = &g_pageList[i];
-            curr = &g_pageList[i];
-            if ((curr->clock < best->clock) && (curr->flags & PAGE_PAGEABLE)) {
-                best = curr;
+                break;
             }
+            best->clock = 0;
+            // if (!best)
+            //     best = &g_pageList[i];
+            // curr = &g_pageList[i];
+            // if ((curr->clock < best->clock) && (curr->flags & PAGE_PAGEABLE)) {
+            //     best = curr;
+
+            // }
         }
     }
+    // KASSERT(0);
     return best;
 
 
@@ -315,7 +357,7 @@ static void *Alloc_Or_Reclaim_Page(pte_t * entry, ulong_t vaddr,
         page->flags |= PAGE_LOCKED;
 
         /* check if it is an mmap'd page */
-            KASSERT(0);
+            // KASSERT(0);
 
         if (Is_Mmaped_Page(page->context, page->vaddr)) {
             mappedPage = true;
@@ -326,7 +368,19 @@ static void *Alloc_Or_Reclaim_Page(pte_t * entry, ulong_t vaddr,
                 page->entry->dirty = 0;
             }
             page->entry->present = 0;
-        } else {
+        }
+        // if(page->context != 0){
+        //     mappedPage = true;
+        //     if (page->entry->dirty) {
+        //         Enable_Interrupts();
+        //         //Write_Out_Mmaped_Page(page->context, page->vaddr);
+        //         Write_To_Paging_File(paddr, paddr->vaddr, paddr);
+        //         Disable_Interrupts();
+        //         page->entry->dirty = 0;
+        //     }
+        //     page->entry->present = 0;
+        // }
+         else {
             mappedPage = false;
 
             /* Find a place on disk for the page (if there isn't space, we're screwed.) */

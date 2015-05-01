@@ -15,7 +15,7 @@
 
 #ifndef GEEKOS_USER_H
 #define GEEKOS_USER_H
-#define MAX_USER_PAGES 10
+#define MAX_USER_PAGES 100
 
 /* Information communicated by the PS system call */
 

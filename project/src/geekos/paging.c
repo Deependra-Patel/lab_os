@@ -176,6 +176,7 @@ int Alloc_User_Page(pde_t * pageDir, uint_t startAddress, uint_t sizeInMemory){
  * You should call the Install_Interrupt_Handler() function to
  * register this function as the handler for interrupt 14.
  */
+
 static void Page_Fault_Handler(struct Interrupt_State *state) {
     // KASSERT(0);
 
@@ -183,7 +184,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
     faultcode_t faultCode;
 
     KASSERT(!Interrupts_Enabled());
- // Update_Clock();
+    Update_Clock();
     /* Get the address that caused the page fault */
     address = Get_Page_Fault_Address();
     // Debug("Page fault @%lx/n=========================", address);
@@ -200,6 +201,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
     //   Print("cur pages %d\n", CURRENT_THREAD->userContext->pages);
     // KASSERT(0);
   res=Alloc_User_Page(userContext->pageDir,Round_Down_To_Page(address),PAGE_SIZE);
+  // Update_Clock_0();
   
   if(res==-1)
   {
@@ -234,6 +236,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
   }
   int pagefile_index = page_entry->pageBaseAddr;
   void * paddr=Alloc_Pageable_Page(page_entry,Round_Down_To_Page(address));
+   // Update_Clock_0();
   if(paddr==NULL)
   {
    Print("no more page/n");
@@ -246,7 +249,7 @@ static void Page_Fault_Handler(struct Interrupt_State *state) {
   page_entry->globalPage = 0;
   page_entry->pageBaseAddr = (ulong_t)paddr>>12;
   Enable_Interrupts();
-  KASSERT(0);
+  // KASSERT(0);
   Read_From_Paging_File(paddr,Round_Down_To_Page(address), pagefile_index);
   Disable_Interrupts();
   Free_Space_On_Paging_File(pagefile_index);
@@ -578,8 +581,6 @@ int Find_Space_On_Paging_File(void) {
  * @param pagefileIndex index of the chunk of disk space
  */
 void Free_Space_On_Paging_File(int pagefileIndex) {
-        KASSERT(0);
-
     KASSERT(!Interrupts_Enabled());
      KASSERT(0 <= pagefileIndex && pagefileIndex < numOfPagingPages);
      Clear_Bit(BitmapPaging, pagefileIndex);    
@@ -600,10 +601,22 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
     KASSERT((page->flags & PAGE_LOCKED));
  //Debug("PageFileIndex: 0 <= %d < %d/n", pagefileIndex, bitmapSize);
     if(0 <= pagefileIndex && pagefileIndex < numOfPagingPages){
-        int i;
+        int i,j;
+        for (j=0; j<1024; j++) {
+            *((int *)(paddr + j)) =  1;
+             // Print("ass: %d\n", *((int *)(paddr + j)));
+         }
+         
+         // Print("ind %d\n", (int)pagingDevice->startSector);
+         KASSERT(0);
+
         for(i = 0;i < SECTORS_PER_PAGE; i++){
+            // Print("i %d\n", i);
+
             Block_Write(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
+            // Block_Read(pagingDevice->dev, pagefileIndex*SECTORS_PER_PAGE + i + (pagingDevice->startSector),paddr+i*SECTOR_SIZE);      
         }
+         KASSERT(0);
         Set_Bit(BitmapPaging, pagefileIndex); 
     }
     else {
@@ -611,7 +624,7 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
         KASSERT(0);
         Exit(-1);
     } 
-    KASSERT(0); 
+    // KASSERT(0);
     //struct Page *page = Get_Page((ulong_t) paddr);
     //KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
     // TODO_P(PROJECT_VIRTUAL_MEMORY_B, "Write page data to paging file");
@@ -627,10 +640,9 @@ void Write_To_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
  *   in the paging file
  */
 void Read_From_Paging_File(void *paddr, ulong_t vaddr, int pagefileIndex) {
-        KASSERT(0);
-
     struct Page *page = Get_Page((ulong_t) paddr);
-    KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
+    Print("flags: %x\n", page->flags);
+    // KASSERT(!(page->flags & PAGE_PAGEABLE));    /* Page must be locked! */
 
     if(0<=pagefileIndex && pagefileIndex<numOfPagingPages){
         int i;
@@ -654,8 +666,9 @@ void *Mmap_Impl(void *ptr, unsigned int length, int prot, int flags, int fd) {
 }
 
 bool Is_Mmaped_Page(struct User_Context * context, ulong_t vaddr) {
-    TODO_P(PROJECT_MMAP,
-           "is this passed vaddr an mmap'd page in the passed user context");
+
+    //TODO_P(PROJECT_MMAP,
+      //     "is this passed vaddr an mmap'd page in the passed user context");
     return false;
 }
 
